@@ -10,7 +10,12 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     const username = try os_module.getUsername(allocator);
-
     try stdout.print("User: {s}\n", .{username});
     try bw.flush();
+    allocator.free(username);
+
+    const hostname = try os_module.getHostname(allocator);
+    try stdout.print("Hostname: {s}\n", .{hostname});
+    try bw.flush();
+    allocator.free(hostname);
 }
