@@ -18,4 +18,8 @@ pub fn main() !void {
     try stdout.print("Hostname: {s}\n", .{hostname});
     try bw.flush();
     allocator.free(hostname);
+
+    const uptime = try os_module.getSystemUptime();
+    try stdout.print("Uptime: {} days, {} hours, {} minutes\n", .{ uptime.days, uptime.hours, uptime.minutes });
+    try bw.flush();
 }
