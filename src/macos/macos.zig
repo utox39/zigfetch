@@ -24,6 +24,9 @@ pub fn getHostname(allocator: std.mem.Allocator) ![]u8 {
 
 pub fn getSystemUptime() !SystemUptime {
     const seconds_per_day: f64 = 86400.0;
+    const hours_per_day: f64 = 24.0;
+    const seconds_per_hour: f64 = 3600.0;
+    const seconds_per_minute: f64 = 60.0;
 
     var boot_time: c_libproc.struct_timeval = undefined;
     var size: usize = @sizeOf(c_libproc.struct_timeval);
@@ -43,10 +46,10 @@ pub fn getSystemUptime() !SystemUptime {
     const days: f64 = @floor(remainig_seconds / seconds_per_day);
 
     remainig_seconds = (remainig_seconds / seconds_per_day) - days;
-    const hours = @floor(remainig_seconds * 24);
+    const hours = @floor(remainig_seconds * hours_per_day);
 
-    remainig_seconds = (remainig_seconds * 24) - hours;
-    const minutes = @floor((remainig_seconds * 3600) / 60);
+    remainig_seconds = (remainig_seconds * hours_per_day) - hours;
+    const minutes = @floor((remainig_seconds * seconds_per_hour) / seconds_per_minute);
 
     return SystemUptime{
         .days = @as(i8, @intFromFloat(days)),
