@@ -2,17 +2,22 @@ const std = @import("std");
 const c_libproc = @cImport(@cInclude("libproc.h"));
 const c_sysctl = @cImport(@cInclude("sys/sysctl.h"));
 
+/// Structure representing system uptime in days, hours, and minutes.
 pub const SystemUptime = struct {
     days: i8,
     hours: i8,
     minutes: i8,
 };
 
+/// Returns the current logged-in uesr's username.
+/// Uses the environment variable `USER`.
+/// The caller is responsible for freeing the allocated memory.
 pub fn getUsername(allocator: std.mem.Allocator) ![]u8 {
     const username = try std.process.getEnvVarOwned(allocator, "USER");
     return username;
 }
 
+/// Returns the hostname.
 pub fn getHostname(allocator: std.mem.Allocator) ![]u8 {
     var buf: [std.posix.HOST_NAME_MAX]u8 = undefined;
     const hostnameEnv = try std.posix.gethostname(&buf);
@@ -22,6 +27,9 @@ pub fn getHostname(allocator: std.mem.Allocator) ![]u8 {
     return hostname;
 }
 
+/// Returns the system uptime.
+///
+/// Uses `sysctl` to fetch the system boot time and calculates the elapsed time.
 pub fn getSystemUptime() !SystemUptime {
     const seconds_per_day: f64 = 86400.0;
     const hours_per_day: f64 = 24.0;
