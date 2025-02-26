@@ -22,4 +22,8 @@ pub fn main() !void {
     const uptime = try os_module.getSystemUptime();
     try stdout.print("Uptime: {} days, {} hours, {} minutes\n", .{ uptime.days, uptime.hours, uptime.minutes });
     try bw.flush();
+
+    const shell = try os_module.getShell(allocator);
+    try stdout.print("Shell: {s}", .{shell});
+    try bw.flush();
 }
