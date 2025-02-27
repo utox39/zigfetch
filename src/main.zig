@@ -26,4 +26,8 @@ pub fn main() !void {
     const shell = try os_module.getShell(allocator);
     try stdout.print("Shell: {s}", .{shell});
     try bw.flush();
+
+    const cpu_info = try os_module.getCpuInfo(allocator);
+    try stdout.print("cpu: {s} ({})\n", .{ cpu_info.cpu_name, cpu_info.cpu_cores });
+    try bw.flush();
 }
