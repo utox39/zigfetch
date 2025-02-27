@@ -31,4 +31,5 @@ pub fn main() !void {
     const cpu_info = try os_module.getCpuInfo(allocator);
     try stdout.print("cpu: {s} ({})\n", .{ cpu_info.cpu_name, cpu_info.cpu_cores });
     try bw.flush();
+    allocator.free(cpu_info.cpu_name);
 }
