@@ -9,6 +9,11 @@ pub const SystemUptime = struct {
     minutes: i8,
 };
 
+pub const CpuInfo = struct {
+    cpu_name: []u8,
+    cpu_cores: i32,
+};
+
 /// Returns the current logged-in uesr's username.
 /// Uses the environment variable `USER`.
 /// The caller is responsible for freeing the allocated memory.
@@ -81,4 +86,35 @@ pub fn getShell(allocator: std.mem.Allocator) ![]u8 {
     _ = try child.wait();
 
     return output;
+}
+
+pub fn getCpuInfo(allocator: std.mem.Allocator) !CpuInfo {
+    var size: usize = 0;
+
+    // First call to sysctlbyname to get the size of the string
+    if (c_sysctl.sysctlbyname("machdep.cpu.brand_string", null, &size, null, 0) != 0) {
+        return error.FailedToGetCpuNameSize;
+    }
+
+    const cpu_name: []u8 = try allocator.alloc(u8, size);
+
+    // Second call to sysctlbyname to get the CPU name
+    if (c_sysctl.sysctlbyname("machdep.cpu.brand_string", cpu_name.ptr, &size, null, 0) != 0) {
+        allocator.free(cpu_name);
+        return error.FailedToGetCpuName;
+    }
+
+    // Call to sysctlbyname to get the cpu cores
+    var n_cpu: i32 = 0;
+    size = @sizeOf(i32);
+    if (c_sysctl.sysctlbyname("hw.ncpu", &n_cpu, &size, null, 0) != 0) {
+        return error.FailedToGetPhysicalCpuInfo;
+    }
+
+    // TODO: add cpu frequency (find a way to get it even on Apple Silicon)
+
+    return CpuInfo{
+        .cpu_name = cpu_name,
+        .cpu_cores = n_cpu,
+    };
 }
