@@ -96,7 +96,7 @@ pub fn getCpuInfo(allocator: std.mem.Allocator) !CpuInfo {
         return error.FailedToGetCpuNameSize;
     }
 
-    const cpu_name: []u8 = try allocator.alloc(u8, size);
+    const cpu_name: []u8 = try allocator.alloc(u8, size - 1);
 
     // Second call to sysctlbyname to get the CPU name
     if (c_sysctl.sysctlbyname("machdep.cpu.brand_string", cpu_name.ptr, &size, null, 0) != 0) {
