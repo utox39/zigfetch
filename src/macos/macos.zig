@@ -55,7 +55,7 @@ pub fn getSystemUptime() !SystemUptime {
     var uptime_ns: f64 = 0.0;
 
     var name = [_]c_int{ c_sysctl.CTL_KERN, c_sysctl.KERN_BOOTTIME };
-    if (c_sysctl.sysctl(&name, 2, &boot_time, &size, null, 0) == 0) {
+    if (c_sysctl.sysctl(&name, name.len, &boot_time, &size, null, 0) == 0) {
         const boot_seconds = @as(f64, @floatFromInt(boot_time.tv_sec));
         const now_seconds = @as(f64, @floatFromInt(std.time.timestamp()));
         uptime_ns = now_seconds - boot_seconds;
