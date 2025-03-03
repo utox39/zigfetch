@@ -32,4 +32,9 @@ pub fn main() !void {
     try stdout.print("cpu: {s} ({})\n", .{ cpu_info.cpu_name, cpu_info.cpu_cores });
     try bw.flush();
     allocator.free(cpu_info.cpu_name);
+
+    const gpu_info = try os_module.getGpuInfo(allocator);
+    try stdout.print("gpu: {s} ({})\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores });
+    try bw.flush();
+    allocator.free(gpu_info.gpu_name);
 }
