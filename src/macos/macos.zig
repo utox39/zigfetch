@@ -4,6 +4,7 @@ const c_libproc = @cImport(@cInclude("libproc.h"));
 const c_sysctl = @cImport(@cInclude("sys/sysctl.h"));
 const c_iokit = @cImport(@cInclude("IOKit/IOKitLib.h"));
 const c_core_foundation = @cImport(@cInclude("CoreFoundation/CoreFoundation.h"));
+const c_mach = @cImport(@cInclude("mach/mach.h"));
 
 /// Structure representing system uptime in days, hours, and minutes.
 pub const SystemUptime = struct {
@@ -20,6 +21,11 @@ pub const CpuInfo = struct {
 pub const GpuInfo = struct {
     gpu_name: []u8,
     gpu_cores: i32,
+};
+
+pub const RamInfo = struct {
+    ram_size: f64,
+    ram_usage: f64,
 };
 
 /// Returns the current logged-in uesr's username.
@@ -205,4 +211,44 @@ pub fn getGpuInfo(allocator: std.mem.Allocator) !GpuInfo {
     }
 
     return gpu_info;
+}
+
+pub fn getRamInfo() !RamInfo {
+    var ram_info = RamInfo{
+        .ram_size = 0,
+        .ram_usage = 0,
+    };
+
+    // -- RAM SIZE --
+    var ram_size: u64 = 0;
+    var ram_size_len: usize = @sizeOf(u64);
+    var name = [_]c_int{ c_sysctl.CTL_HW, c_sysctl.HW_MEMSIZE };
+    if (c_sysctl.sysctl(&name, name.len, &ram_size, &ram_size_len, null, 0) != 0) {
+        return error.FailedToGetRamSize;
+    }
+
+    // Converts Bytes to Gigabytes
+    const ram_size_gb: f64 = @as(f64, @floatFromInt(ram_size)) / (1024 * 1024 * 1024);
+
+    ram_info.ram_size = ram_size_gb;
+
+    // -- RAM USAGE --
+
+    var info: c_mach.vm_statistics64 = undefined;
+    var count: c_mach.mach_msg_type_number_t = @sizeOf(c_mach.vm_statistics64) / @sizeOf(c_mach.integer_t);
+    const host_port = c_mach.mach_host_self();
+
+    if (c_mach.host_statistics64(host_port, c_mach.HOST_VM_INFO64, @ptrCast(&info), &count) != c_mach.KERN_SUCCESS) {
+        return error.HostStatistics64Failed;
+    }
+
+    const page_size: u64 = std.mem.page_size;
+    const ram_usage = (info.active_count + info.inactive_count + info.wire_count) * page_size;
+
+    // Converts Bytes to Gigabytes
+    const ram_usage_gb: f64 = @as(f64, @floatFromInt(ram_usage)) / (1024 * 1024 * 1024);
+
+    ram_info.ram_usage = ram_usage_gb;
+
+    return ram_info;
 }
