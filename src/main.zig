@@ -37,4 +37,8 @@ pub fn main() !void {
     try stdout.print("gpu: {s} ({})\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores });
     try bw.flush();
     allocator.free(gpu_info.gpu_name);
+
+    const ram_info = try os_module.getRamInfo();
+    try stdout.print("ram: {d:.2} / {d:.2} GB\n", .{ ram_info.ram_usage, ram_info.ram_size });
+    try bw.flush();
 }
