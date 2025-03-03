@@ -233,7 +233,6 @@ pub fn getRamInfo() !RamInfo {
     ram_info.ram_size = ram_size_gb;
 
     // -- RAM USAGE --
-
     var info: c_mach.vm_statistics64 = undefined;
     var count: c_mach.mach_msg_type_number_t = @sizeOf(c_mach.vm_statistics64) / @sizeOf(c_mach.integer_t);
     const host_port = c_mach.mach_host_self();
