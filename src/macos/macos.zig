@@ -1,6 +1,9 @@
 const std = @import("std");
+const utils = @import("./utils.zig");
 const c_libproc = @cImport(@cInclude("libproc.h"));
 const c_sysctl = @cImport(@cInclude("sys/sysctl.h"));
+const c_iokit = @cImport(@cInclude("IOKit/IOKitLib.h"));
+const c_core_foundation = @cImport(@cInclude("CoreFoundation/CoreFoundation.h"));
 
 /// Structure representing system uptime in days, hours, and minutes.
 pub const SystemUptime = struct {
@@ -12,6 +15,11 @@ pub const SystemUptime = struct {
 pub const CpuInfo = struct {
     cpu_name: []u8,
     cpu_cores: i32,
+};
+
+pub const GpuInfo = struct {
+    gpu_name: []u8,
+    gpu_cores: i32,
 };
 
 /// Returns the current logged-in uesr's username.
@@ -117,4 +125,84 @@ pub fn getCpuInfo(allocator: std.mem.Allocator) !CpuInfo {
         .cpu_name = cpu_name,
         .cpu_cores = n_cpu,
     };
+}
+
+/// Returns the gpu info.
+pub fn getGpuInfo(allocator: std.mem.Allocator) !GpuInfo {
+    // TODO: add support for non-Apple Silicon Macs
+
+    var gpu_info = GpuInfo{
+        .gpu_name = try allocator.dupe(u8, "Unknown"),
+        .gpu_cores = 0,
+    };
+
+    // https://developer.apple.com/documentation/iokit/1514687-ioservicematching
+    const accel_matching_dict = c_iokit.IOServiceMatching("IOAccelerator");
+    if (accel_matching_dict == null) {
+        return error.MatchingDictionaryCreationFailed;
+    }
+
+    var iterator: c_iokit.io_iterator_t = undefined;
+    // https://developer.apple.com/documentation/iokit/1514494-ioservicegetmatchingservices
+    const result = c_iokit.IOServiceGetMatchingServices(c_iokit.kIOMasterPortDefault, accel_matching_dict, &iterator);
+
+    if (result != c_iokit.KERN_SUCCESS) {
+        return error.ServiceMatchingFailed;
+    }
+    defer _ = c_iokit.IOObjectRelease(iterator);
+
+    const service = c_iokit.IOIteratorNext(iterator);
+    if (service != 0) {
+        defer _ = c_iokit.IOObjectRelease(service);
+
+        var properties_ptr: c_iokit.CFMutableDictionaryRef = null;
+        const properties_ptr_ref: [*c]c_iokit.CFMutableDictionaryRef = &properties_ptr;
+
+        // https://developer.apple.com/documentation/iokit/1514310-ioregistryentrycreatecfpropertie
+        if (c_iokit.IORegistryEntryCreateCFProperties(service, properties_ptr_ref, c_iokit.kCFAllocatorDefault, 0) != c_iokit.KERN_SUCCESS) {
+            return gpu_info;
+        }
+
+        if (properties_ptr == null) {
+            return gpu_info;
+        }
+        defer c_iokit.CFRelease(properties_ptr);
+
+        var name_ref: c_iokit.CFTypeRef = undefined;
+        var cores_ref: c_iokit.CFTypeRef = undefined;
+
+        // CFSTR is a macro and can't be translated by Zig
+        // The CFString is created "manually"
+        const model_key = c_iokit.CFStringCreateWithCString(c_iokit.kCFAllocatorDefault, "model", c_iokit.kCFStringEncodingUTF8);
+        if (model_key == null) return gpu_info;
+        defer c_iokit.CFRelease(model_key);
+
+        if (c_iokit.CFDictionaryGetValueIfPresent(@as(c_iokit.CFDictionaryRef, @ptrCast(properties_ptr)), model_key, &name_ref) == c_iokit.TRUE) {
+            if (c_iokit.CFGetTypeID(name_ref) == c_iokit.CFStringGetTypeID()) {
+                const accel_name = utils.cfStringToZigString(allocator, @as(c_iokit.CFStringRef, @ptrCast(name_ref))) catch {
+                    return gpu_info;
+                };
+
+                allocator.free(gpu_info.gpu_name);
+                gpu_info.gpu_name = accel_name;
+            }
+        }
+
+        // CFSTR is a macro and can't be translated by Zig
+        // The CFString is created "manually"
+        const gpu_core_count_key = c_iokit.CFStringCreateWithCString(c_iokit.kCFAllocatorDefault, "gpu-core-count", c_iokit.kCFStringEncodingUTF8);
+        if (gpu_core_count_key == null) return gpu_info;
+        defer c_iokit.CFRelease(gpu_core_count_key);
+
+        if (c_iokit.CFDictionaryGetValueIfPresent(@as(c_iokit.CFDictionaryRef, @ptrCast(properties_ptr)), gpu_core_count_key, &cores_ref) == c_iokit.TRUE) {
+            if (c_iokit.CFGetTypeID(cores_ref) == c_core_foundation.CFNumberGetTypeID()) {
+                var cores_num: i32 = 0;
+                if (c_core_foundation.CFNumberGetValue(@as(c_core_foundation.CFNumberRef, @ptrCast(cores_ref)), c_core_foundation.kCFNumberIntType, &cores_num) == c_core_foundation.TRUE) {
+                    gpu_info.gpu_cores = cores_num;
+                }
+            }
+        }
+    }
+
+    return gpu_info;
 }
