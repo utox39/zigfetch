@@ -39,6 +39,6 @@ pub fn main() !void {
     allocator.free(gpu_info.gpu_name);
 
     const ram_info = try os_module.getRamInfo();
-    try stdout.print("ram: {d:.2} / {d:.2} GB\n", .{ ram_info.ram_usage, ram_info.ram_size });
+    try stdout.print("ram: {d:.2} / {d:.2} GB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
     try bw.flush();
 }
