@@ -26,6 +26,7 @@ pub const GpuInfo = struct {
 pub const RamInfo = struct {
     ram_size: f64,
     ram_usage: f64,
+    ram_usage_percentage: u8,
 };
 
 /// Returns the current logged-in uesr's username.
@@ -217,6 +218,7 @@ pub fn getRamInfo() !RamInfo {
     var ram_info = RamInfo{
         .ram_size = 0,
         .ram_usage = 0,
+        .ram_usage_percentage = 0,
     };
 
     // -- RAM SIZE --
@@ -248,6 +250,9 @@ pub fn getRamInfo() !RamInfo {
     const ram_usage_gb: f64 = @as(f64, @floatFromInt(ram_usage)) / (1024 * 1024 * 1024);
 
     ram_info.ram_usage = ram_usage_gb;
+
+    const ram_usage_percentage: u8 = @as(u8, @intFromFloat(@round((ram_usage_gb * 100) / ram_size_gb)));
+    ram_info.ram_usage_percentage = ram_usage_percentage;
 
     return ram_info;
 }
