@@ -251,7 +251,7 @@ pub fn getRamInfo() !RamInfo {
 
     ram_info.ram_usage = ram_usage_gb;
 
-    const ram_usage_percentage: u8 = @as(u8, @intFromFloat(@round((ram_usage_gb * 100) / ram_size_gb)));
+    const ram_usage_percentage: u8 = @as(u8, @intFromFloat((ram_usage_gb * 100) / ram_size_gb));
     ram_info.ram_usage_percentage = ram_usage_percentage;
 
     return ram_info;
