@@ -242,7 +242,7 @@ pub fn getRamInfo() !RamInfo {
     }
 
     const page_size: u64 = std.mem.page_size;
-    const ram_usage = (info.active_count + info.inactive_count + info.wire_count) * page_size;
+    const ram_usage = (info.active_count + info.wire_count) * page_size;
 
     // Converts Bytes to Gigabytes
     const ram_usage_gb: f64 = @as(f64, @floatFromInt(ram_usage)) / (1024 * 1024 * 1024);
