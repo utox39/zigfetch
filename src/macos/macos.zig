@@ -59,18 +59,18 @@ pub fn getSystemUptime() !SystemUptime {
     var boot_time: c_libproc.struct_timeval = undefined;
     var size: usize = @sizeOf(c_libproc.struct_timeval);
 
-    var uptime_ns: f64 = 0.0;
+    var uptime: f64 = 0.0;
 
     var name = [_]c_int{ c_sysctl.CTL_KERN, c_sysctl.KERN_BOOTTIME };
     if (c_sysctl.sysctl(&name, name.len, &boot_time, &size, null, 0) == 0) {
         const boot_seconds = @as(f64, @floatFromInt(boot_time.tv_sec));
         const now_seconds = @as(f64, @floatFromInt(std.time.timestamp()));
-        uptime_ns = now_seconds - boot_seconds;
+        uptime = now_seconds - boot_seconds;
     } else {
         return error.UnableToGetSystemUptime;
     }
 
-    var remainig_seconds: f64 = uptime_ns;
+    var remainig_seconds: f64 = uptime;
     const days: f64 = @floor(remainig_seconds / seconds_per_day);
 
     remainig_seconds = (remainig_seconds / seconds_per_day) - days;
