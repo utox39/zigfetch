@@ -1,11 +1,18 @@
 const std = @import("std");
 const c_sysinfo = @cImport(@cInclude("sys/sysinfo.h"));
+const c_unistd = @cImport(@cInclude("unistd.h"));
 
 /// Structure representing system uptime in days, hours, and minutes.
 pub const SystemUptime = struct {
     days: i8,
     hours: i8,
     minutes: i8,
+};
+
+pub const CpuInfo = struct {
+    cpu_name: []u8,
+    cpu_cores: i32,
+    cpu_max_freq: f32,
 };
 
 pub fn getUsername(allocator: std.mem.Allocator) ![]u8 {
@@ -69,4 +76,49 @@ pub fn getShell(allocator: std.mem.Allocator) ![]u8 {
     _ = try child.wait();
 
     return output;
+}
+
+pub fn getCpuInfo(allocator: std.mem.Allocator) !CpuInfo {
+    const cpu_cores = c_unistd.sysconf(c_unistd._SC_NPROCESSORS_ONLN);
+
+    // Reads /proc/cpuinfo
+    const cpuinfo_path = "/proc/cpuinfo";
+    var file = try std.fs.cwd().openFile(cpuinfo_path, .{});
+    defer file.close();
+    const cpuinfo_data = try file.readToEndAlloc(allocator, std.math.maxInt(usize));
+    defer allocator.free(cpuinfo_data);
+
+    // Parsing /proc/cpuinfo
+    var model_name: ?[]const u8 = null;
+
+    var lines = std.mem.split(u8, cpuinfo_data, "\n");
+    while (lines.next()) |line| {
+        const trimmed = std.mem.trim(u8, line, " \t");
+        if (std.mem.startsWith(u8, trimmed, "model name") and model_name == null) {
+            var parts = std.mem.split(u8, trimmed, ":");
+            _ = parts.next(); // discards the key
+            if (parts.next()) |value| {
+                model_name = std.mem.trim(u8, value, " ");
+                break;
+            }
+        }
+    }
+
+    // Reads /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq
+    const cpuinfo_max_freq_path = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq";
+    var file2 = try std.fs.cwd().openFile(cpuinfo_max_freq_path, .{});
+    defer file2.close();
+    const cpuinfo_max_freq_data = try file2.readToEndAlloc(allocator, std.math.maxInt(usize));
+    defer allocator.free(cpuinfo_max_freq_data);
+
+    // Parsing /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq
+    const trimmed = std.mem.trim(u8, cpuinfo_max_freq_data, " \n\r");
+    const cpu_max_freq_khz: f32 = try std.fmt.parseFloat(f32, trimmed);
+    const cpu_max_freq: f32 = cpu_max_freq_khz / 1_000_000;
+
+    return CpuInfo{
+        .cpu_name = try allocator.dupe(u8, model_name orelse "Unknown"),
+        .cpu_cores = @as(i32, @intCast(cpu_cores)),
+        .cpu_max_freq = cpu_max_freq,
+    };
 }
