@@ -243,7 +243,7 @@ pub fn getRamInfo() !RamInfo {
         return error.HostStatistics64Failed;
     }
 
-    const page_size: u64 = std.mem.page_size;
+    const page_size: u64 = std.heap.page_size_min;
     const ram_usage = (info.active_count + info.wire_count) * page_size;
 
     // Converts Bytes to Gigabytes
