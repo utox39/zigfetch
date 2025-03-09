@@ -41,4 +41,8 @@ pub fn main() !void {
     const ram_info = try os_module.getRamInfo();
     try stdout.print("ram: {d:.2} / {d:.2} GB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
     try bw.flush();
+
+    const diskInfo = try os_module.getDiskSize("/");
+    try stdout.print("disk ({s}): {d:.2} / {d:.2} GB ({}%)\n", .{ diskInfo.disk_path, diskInfo.disk_usage, diskInfo.disk_size, diskInfo.disk_usage_percentage });
+    try bw.flush();
 }
