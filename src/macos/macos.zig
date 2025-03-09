@@ -223,12 +223,6 @@ pub fn getGpuInfo(allocator: std.mem.Allocator) !GpuInfo {
 }
 
 pub fn getRamInfo() !RamInfo {
-    var ram_info = RamInfo{
-        .ram_size = 0,
-        .ram_usage = 0,
-        .ram_usage_percentage = 0,
-    };
-
     // -- RAM SIZE --
     var ram_size: u64 = 0;
     var ram_size_len: usize = @sizeOf(u64);
@@ -239,8 +233,6 @@ pub fn getRamInfo() !RamInfo {
 
     // Converts Bytes to Gigabytes
     const ram_size_gb: f64 = @as(f64, @floatFromInt(ram_size)) / (1024 * 1024 * 1024);
-
-    ram_info.ram_size = ram_size_gb;
 
     // -- RAM USAGE --
     var info: c_mach.vm_statistics64 = undefined;
@@ -257,12 +249,13 @@ pub fn getRamInfo() !RamInfo {
     // Converts Bytes to Gigabytes
     const ram_usage_gb: f64 = @as(f64, @floatFromInt(ram_usage)) / (1024 * 1024 * 1024);
 
-    ram_info.ram_usage = ram_usage_gb;
-
     const ram_usage_percentage: u8 = @as(u8, @intFromFloat((ram_usage_gb * 100) / ram_size_gb));
-    ram_info.ram_usage_percentage = ram_usage_percentage;
 
-    return ram_info;
+    return RamInfo{
+        .ram_size = ram_size_gb,
+        .ram_usage = ram_usage_gb,
+        .ram_usage_percentage = ram_usage_percentage,
+    };
 }
 
 pub fn getDiskSize(disk_path: []const u8) !DiskInfo {
