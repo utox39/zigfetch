@@ -45,4 +45,9 @@ pub fn main() !void {
     const diskInfo = try os_module.getDiskSize("/");
     try stdout.print("disk ({s}): {d:.2} / {d:.2} GB ({}%)\n", .{ diskInfo.disk_path, diskInfo.disk_usage, diskInfo.disk_size, diskInfo.disk_usage_percentage });
     try bw.flush();
+
+    const terminal_name = try os_module.getTerminalName(allocator);
+    try stdout.print("terminal: {s}\n", .{terminal_name});
+    try bw.flush();
+    allocator.free(terminal_name);
 }
