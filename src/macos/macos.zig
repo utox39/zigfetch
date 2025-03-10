@@ -282,3 +282,25 @@ pub fn getTerminalName(allocator: std.mem.Allocator) ![]u8 {
     const term_progrm = try std.process.getEnvVarOwned(allocator, "TERM_PROGRAM");
     return term_progrm;
 }
+
+pub fn getOsInfo(allocator: std.mem.Allocator) ![]u8 {
+    var size: usize = 0;
+
+    // First call to sysctlbyname to get the size of the string
+    if (c_sysctl.sysctlbyname("kern.osproductversion", null, &size, null, 0) != 0) {
+        return error.FailedToGetCpuNameSize;
+    }
+
+    const os_version: []u8 = try allocator.alloc(u8, size - 1);
+    defer allocator.free(os_version);
+
+    // Second call to sysctlbyname to get the os version
+    if (c_sysctl.sysctlbyname("kern.osproductversion", os_version.ptr, &size, null, 0) != 0) {
+        allocator.free(os_version);
+        return error.FailedToGetOsVersion;
+    }
+
+    const os_info = try std.fmt.allocPrint(allocator, "macOS {s}", .{os_version});
+
+    return os_info;
+}
