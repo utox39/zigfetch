@@ -277,3 +277,8 @@ pub fn getDiskSize(disk_path: []const u8) !DiskInfo {
         .disk_usage_percentage = @as(u8, @intCast(used_size_percentage)),
     };
 }
+
+pub fn getTerminalName(allocator: std.mem.Allocator) ![]u8 {
+    const term_progrm = try std.process.getEnvVarOwned(allocator, "TERM_PROGRAM");
+    return term_progrm;
+}
