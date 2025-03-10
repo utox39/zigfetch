@@ -9,6 +9,11 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
+    const os_info = try os_module.getOsInfo(allocator);
+    try stdout.print("OS: {s}\n", .{os_info});
+    try bw.flush();
+    allocator.free(os_info);
+
     const username = try os_module.getUsername(allocator);
     try stdout.print("User: {s}\n", .{username});
     try bw.flush();
