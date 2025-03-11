@@ -43,10 +43,10 @@ pub const SwapInfo = struct {
     swap_usage_percentage: u64,
 };
 
-pub const SwapInfoResult = union(enum) {
-    swap_info: SwapInfo,
-    swap_disabled: bool,
-};
+// pub const SwapInfoResult = union(enum) {
+//     swap_info: SwapInfo,
+//     swap_disabled: bool,
+// };
 
 /// Returns the current logged-in uesr's username.
 /// Uses the environment variable `USER`.
@@ -316,7 +316,7 @@ pub fn getOsInfo(allocator: std.mem.Allocator) ![]u8 {
     return os_info;
 }
 
-pub fn getSwapInfo() !SwapInfoResult {
+pub fn getSwapInfo() !?SwapInfo {
     var swap: c_sysctl.struct_xsw_usage = undefined;
     var size: usize = @sizeOf(c_sysctl.struct_xsw_usage);
 
@@ -330,12 +330,12 @@ pub fn getSwapInfo() !SwapInfoResult {
     if (@as(u64, swap.xsu_total) != 0) {
         swap_usage_percentage = (@as(u64, swap.xsu_used) * 100) / @as(u64, swap.xsu_total);
     } else {
-        return SwapInfoResult{ .swap_disabled = true };
+        return null;
     }
 
-    return SwapInfoResult{ .swap_info = SwapInfo{
+    return SwapInfo{
         .swap_size = swap_size,
         .swap_usage = swap_usage,
         .swap_usage_percentage = swap_usage_percentage,
-    } };
+    };
 }
