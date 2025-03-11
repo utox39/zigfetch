@@ -37,6 +37,17 @@ pub const DiskInfo = struct {
     disk_usage_percentage: u8,
 };
 
+pub const SwapInfo = struct {
+    swap_size: f64,
+    swap_usage: f64,
+    swap_usage_percentage: u64,
+};
+
+pub const SwapInfoResult = union(enum) {
+    swap_info: SwapInfo,
+    swap_disabled: bool,
+};
+
 /// Returns the current logged-in uesr's username.
 /// Uses the environment variable `USER`.
 /// The caller is responsible for freeing the allocated memory.
@@ -303,4 +314,28 @@ pub fn getOsInfo(allocator: std.mem.Allocator) ![]u8 {
     const os_info = try std.fmt.allocPrint(allocator, "macOS {s}", .{os_version});
 
     return os_info;
+}
+
+pub fn getSwapInfo() !SwapInfoResult {
+    var swap: c_sysctl.struct_xsw_usage = undefined;
+    var size: usize = @sizeOf(c_sysctl.struct_xsw_usage);
+
+    if (c_sysctl.sysctlbyname("vm.swapusage", &swap, &size, null, 0) != 0) {
+        return error.FailedToGetSwapInfo;
+    }
+
+    const swap_size = @as(f64, @floatFromInt(swap.xsu_total / (1024 * 1024 * 1024)));
+    const swap_usage = @as(f64, @floatFromInt(swap.xsu_used / (1024 * 1024 * 1024)));
+    var swap_usage_percentage: u64 = 0;
+    if (@as(u64, swap.xsu_total) != 0) {
+        swap_usage_percentage = (@as(u64, swap.xsu_used) * 100) / @as(u64, swap.xsu_total);
+    } else {
+        return SwapInfoResult{ .swap_disabled = true };
+    }
+
+    return SwapInfoResult{ .swap_info = SwapInfo{
+        .swap_size = swap_size,
+        .swap_usage = swap_usage,
+        .swap_usage_percentage = swap_usage_percentage,
+    } };
 }
