@@ -24,6 +24,11 @@ pub const GpuInfo = struct {
     gpu_cores: i32,
 };
 
+pub const KernelInfo = struct {
+    kernel_name: []u8,
+    kernel_release: []u8,
+};
+
 pub const RamInfo = struct {
     ram_size: f64,
     ram_usage: f64,
@@ -287,6 +292,43 @@ pub fn getDiskSize(disk_path: []const u8) !DiskInfo {
 pub fn getTerminalName(allocator: std.mem.Allocator) ![]u8 {
     const term_progrm = try std.process.getEnvVarOwned(allocator, "TERM_PROGRAM");
     return term_progrm;
+}
+
+pub fn getKernelInfo(allocator: std.mem.Allocator) !KernelInfo {
+    var size: usize = 0;
+
+    // --- KERNEL NAME ---
+    // First call to sysctlbyname to get the size of the string
+    if (c_sysctl.sysctlbyname("kern.ostype", null, &size, null, 0) != 0) {
+        return error.FailedToGetKernelNameSize;
+    }
+
+    const kernel_type: []u8 = try allocator.alloc(u8, size - 1);
+
+    // Second call to sysctlbyname to get the kernel name
+    if (c_sysctl.sysctlbyname("kern.ostype", kernel_type.ptr, &size, null, 0) != 0) {
+        allocator.free(kernel_type);
+        return error.FailedToGetKernelName;
+    }
+
+    // --- KERNEL RELEASE ---
+    // First call to sysctlbyname to get the size of the string
+    if (c_sysctl.sysctlbyname("kern.osrelease", null, &size, null, 0) != 0) {
+        return error.FailedToGetKernelReleaseSize;
+    }
+
+    const os_release: []u8 = try allocator.alloc(u8, size - 1);
+
+    // Second call to sysctlbyname to get the kernel release
+    if (c_sysctl.sysctlbyname("kern.osrelease", os_release.ptr, &size, null, 0) != 0) {
+        allocator.free(os_release);
+        return error.FailedToGetKernelRelease;
+    }
+
+    return KernelInfo{
+        .kernel_name = kernel_type,
+        .kernel_release = os_release,
+    };
 }
 
 pub fn getOsInfo(allocator: std.mem.Allocator) ![]u8 {
