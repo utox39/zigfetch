@@ -43,11 +43,6 @@ pub const SwapInfo = struct {
     swap_usage_percentage: u64,
 };
 
-// pub const SwapInfoResult = union(enum) {
-//     swap_info: SwapInfo,
-//     swap_disabled: bool,
-// };
-
 /// Returns the current logged-in uesr's username.
 /// Uses the environment variable `USER`.
 /// The caller is responsible for freeing the allocated memory.
