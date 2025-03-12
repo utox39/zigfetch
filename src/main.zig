@@ -9,6 +9,12 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
+    const kernel_info = try os_module.getKernelInfo(allocator);
+    try stdout.print("Kernel: {s} {s}\n", .{ kernel_info.kernel_name, kernel_info.kernel_release });
+    try bw.flush();
+    allocator.free(kernel_info.kernel_name);
+    allocator.free(kernel_info.kernel_release);
+
     const os_info = try os_module.getOsInfo(allocator);
     try stdout.print("OS: {s}\n", .{os_info});
     try bw.flush();
