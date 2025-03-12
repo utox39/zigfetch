@@ -47,14 +47,11 @@ pub fn main() !void {
     try stdout.print("ram: {d:.2} / {d:.2} GB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
     try bw.flush();
 
-    const swap_result = try os_module.getSwapInfo();
-    switch (swap_result) {
-        .swap_info => |s| {
-            try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
-        },
-        .swap_disabled => {
-            try stdout.print("Swap: Disabled\n", .{});
-        },
+    const swap_info = try os_module.getSwapInfo();
+    if (swap_info) |s| {
+        try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
+    } else {
+        try stdout.print("Swap: Disabled\n", .{});
     }
     try bw.flush();
 
