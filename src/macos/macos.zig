@@ -11,7 +11,6 @@ const c_inet = @cImport(@cInclude("arpa/inet.h"));
 const c_net_if = @cImport(@cInclude("net/if.h"));
 const c_netinet_in = @cImport(@cInclude("netinet/in.h"));
 const c_socket = @cImport(@cInclude("sys/socket.h"));
-// const c_stdlib = @cImport(@cInclude("stdlib.h"));
 
 /// Structure representing system uptime in days, hours, and minutes.
 pub const SystemUptime = struct {
