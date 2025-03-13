@@ -142,10 +142,10 @@ pub fn getCpuInfo(allocator: std.mem.Allocator) !CpuInfo {
     }
 
     const cpu_name: []u8 = try allocator.alloc(u8, size - 1);
+    errdefer allocator.free(cpu_name);
 
     // Second call to sysctlbyname to get the CPU name
     if (c_sysctl.sysctlbyname("machdep.cpu.brand_string", cpu_name.ptr, &size, null, 0) != 0) {
-        allocator.free(cpu_name);
         return error.FailedToGetCpuName;
     }
 
@@ -315,10 +315,10 @@ pub fn getKernelInfo(allocator: std.mem.Allocator) !KernelInfo {
     }
 
     const kernel_type: []u8 = try allocator.alloc(u8, size - 1);
+    errdefer allocator.free(kernel_type);
 
     // Second call to sysctlbyname to get the kernel name
     if (c_sysctl.sysctlbyname("kern.ostype", kernel_type.ptr, &size, null, 0) != 0) {
-        allocator.free(kernel_type);
         return error.FailedToGetKernelName;
     }
 
@@ -329,10 +329,10 @@ pub fn getKernelInfo(allocator: std.mem.Allocator) !KernelInfo {
     }
 
     const os_release: []u8 = try allocator.alloc(u8, size - 1);
+    errdefer allocator.free(os_release);
 
     // Second call to sysctlbyname to get the kernel release
     if (c_sysctl.sysctlbyname("kern.osrelease", os_release.ptr, &size, null, 0) != 0) {
-        allocator.free(os_release);
         return error.FailedToGetKernelRelease;
     }
 
