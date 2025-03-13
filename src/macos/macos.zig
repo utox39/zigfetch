@@ -355,7 +355,6 @@ pub fn getOsInfo(allocator: std.mem.Allocator) ![]u8 {
 
     // Second call to sysctlbyname to get the os version
     if (c_sysctl.sysctlbyname("kern.osproductversion", os_version.ptr, &size, null, 0) != 0) {
-        allocator.free(os_version);
         return error.FailedToGetOsVersion;
     }
 
