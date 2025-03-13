@@ -69,4 +69,13 @@ pub fn main() !void {
     try stdout.print("terminal: {s}\n", .{terminal_name});
     try bw.flush();
     allocator.free(terminal_name);
+
+    const net_info_list = try os_module.getNetInfo(allocator);
+    for (net_info_list.items) |n| {
+        try stdout.print("Local IP ({s}): {s}\n", .{ n.interface_name, n.ipv4_addr });
+        try bw.flush();
+        allocator.free(n.interface_name);
+        allocator.free(n.ipv4_addr);
+    }
+    net_info_list.deinit();
 }
