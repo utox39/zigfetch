@@ -3,7 +3,7 @@ const utils = @import("./utils.zig");
 const c_libproc = @cImport(@cInclude("libproc.h"));
 const c_sysctl = @cImport(@cInclude("sys/sysctl.h"));
 const c_iokit = @cImport(@cInclude("IOKit/IOKitLib.h"));
-const c_core_foundation = @cImport(@cInclude("CoreFoundation/CoreFoundation.h"));
+const c_cf = @cImport(@cInclude("CoreFoundation/CoreFoundation.h"));
 const c_mach = @cImport(@cInclude("mach/mach.h"));
 const c_statvfs = @cImport(@cInclude("sys/statvfs.h"));
 const c_ifaddrs = @cImport(@cInclude("ifaddrs.h"));
@@ -231,9 +231,9 @@ pub fn getGpuInfo(allocator: std.mem.Allocator) !GpuInfo {
         defer c_iokit.CFRelease(gpu_core_count_key);
 
         if (c_iokit.CFDictionaryGetValueIfPresent(@as(c_iokit.CFDictionaryRef, @ptrCast(properties_ptr)), gpu_core_count_key, &cores_ref) == c_iokit.TRUE) {
-            if (c_iokit.CFGetTypeID(cores_ref) == c_core_foundation.CFNumberGetTypeID()) {
+            if (c_iokit.CFGetTypeID(cores_ref) == c_cf.CFNumberGetTypeID()) {
                 var cores_num: i32 = 0;
-                if (c_core_foundation.CFNumberGetValue(@as(c_core_foundation.CFNumberRef, @ptrCast(cores_ref)), c_core_foundation.kCFNumberIntType, &cores_num) == c_core_foundation.TRUE) {
+                if (c_cf.CFNumberGetValue(@as(c_cf.CFNumberRef, @ptrCast(cores_ref)), c_cf.kCFNumberIntType, &cores_num) == c_cf.TRUE) {
                     gpu_info.gpu_cores = cores_num;
                 }
             }
