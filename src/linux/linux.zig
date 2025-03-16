@@ -1,6 +1,7 @@
 const std = @import("std");
 const c_sysinfo = @cImport(@cInclude("sys/sysinfo.h"));
 const c_unistd = @cImport(@cInclude("unistd.h"));
+const c_utsname = @cImport(@cInclude("sys/utsname.h"));
 
 /// Structure representing system uptime in days, hours, and minutes.
 pub const SystemUptime = struct {
@@ -19,6 +20,11 @@ pub const RamInfo = struct {
     ram_size: f64,
     ram_usage: f64,
     ram_usage_percentage: u8,
+};
+
+pub const KernelInfo = struct {
+    kernel_name: []u8,
+    kernel_release: []u8,
 };
 
 pub fn getUsername(allocator: std.mem.Allocator) ![]u8 {
@@ -188,5 +194,17 @@ pub fn getRamInfo(allocator: std.mem.Allocator) !RamInfo {
         .ram_size = total_mem,
         .ram_usage = used_mem,
         .ram_usage_percentage = ram_usage_percentage,
+    };
+}
+
+pub fn getKernelInfo(allocator: std.mem.Allocator) !KernelInfo {
+    var uts: c_utsname.struct_utsname = undefined;
+    if (c_utsname.uname(&uts) != 0) {
+        return error.UnameFailed;
+    }
+
+    return KernelInfo{
+        .kernel_name = try allocator.dupe(u8, &uts.sysname),
+        .kernel_release = try allocator.dupe(u8, &uts.release),
     };
 }
