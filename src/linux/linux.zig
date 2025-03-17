@@ -243,6 +243,11 @@ pub fn getOsInfo(allocator: std.mem.Allocator) ![]u8 {
     return try allocator.dupe(u8, pretty_name orelse "Unknown");
 }
 
+pub fn getTerminalName(allocator: std.mem.Allocator) ![]u8 {
+    const term_progrm = try std.process.getEnvVarOwned(allocator, "TERM_PROGRAM");
+    return term_progrm;
+}
+
 pub fn getNetInfo(allocator: std.mem.Allocator) !std.ArrayList(NetInfo) {
     var net_info_list = std.ArrayList(NetInfo).init(allocator);
 
