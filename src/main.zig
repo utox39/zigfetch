@@ -1,5 +1,5 @@
 const std = @import("std");
-const os_module = @import("detection.zig").os_module;
+const detection = @import("detection.zig").os_module;
 
 pub fn main() !void {
     const stdout_file = std.io.getStdOut().writer();
@@ -9,56 +9,56 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
-    const kernel_info = try os_module.getKernelInfo(allocator);
+    const kernel_info = try detection.getKernelInfo(allocator);
     try stdout.print("Kernel: {s} {s}\n", .{ kernel_info.kernel_name, kernel_info.kernel_release });
     try bw.flush();
     allocator.free(kernel_info.kernel_name);
     allocator.free(kernel_info.kernel_release);
 
-    const os_info = try os_module.getOsInfo(allocator);
+    const os_info = try detection.getOsInfo(allocator);
     try stdout.print("OS: {s}\n", .{os_info});
     try bw.flush();
     allocator.free(os_info);
 
-    const username = try os_module.getUsername(allocator);
+    const username = try detection.getUsername(allocator);
     try stdout.print("User: {s}\n", .{username});
     try bw.flush();
     allocator.free(username);
 
-    const hostname = try os_module.getHostname(allocator);
+    const hostname = try detection.getHostname(allocator);
     try stdout.print("Hostname: {s}\n", .{hostname});
     try bw.flush();
     allocator.free(hostname);
 
-    const locale = try os_module.getLocale(allocator);
+    const locale = try detection.getLocale(allocator);
     try stdout.print("Locale: {s}\n", .{locale});
     try bw.flush();
     allocator.free(locale);
 
-    const uptime = try os_module.getSystemUptime();
+    const uptime = try detection.getSystemUptime();
     try stdout.print("Uptime: {} days, {} hours, {} minutes\n", .{ uptime.days, uptime.hours, uptime.minutes });
     try bw.flush();
 
-    const shell = try os_module.getShell(allocator);
+    const shell = try detection.getShell(allocator);
     try stdout.print("Shell: {s}", .{shell});
     try bw.flush();
     allocator.free(shell);
 
-    const cpu_info = try os_module.getCpuInfo(allocator);
+    const cpu_info = try detection.getCpuInfo(allocator);
     try stdout.print("cpu: {s} ({})\n", .{ cpu_info.cpu_name, cpu_info.cpu_cores });
     try bw.flush();
     allocator.free(cpu_info.cpu_name);
 
-    const gpu_info = try os_module.getGpuInfo(allocator);
+    const gpu_info = try detection.getGpuInfo(allocator);
     try stdout.print("gpu: {s} ({})\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores });
     try bw.flush();
     allocator.free(gpu_info.gpu_name);
 
-    const ram_info = try os_module.getRamInfo();
+    const ram_info = try detection.getRamInfo();
     try stdout.print("ram: {d:.2} / {d:.2} GB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
     try bw.flush();
 
-    const swap_info = try os_module.getSwapInfo();
+    const swap_info = try detection.getSwapInfo();
     if (swap_info) |s| {
         try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
     } else {
@@ -66,16 +66,16 @@ pub fn main() !void {
     }
     try bw.flush();
 
-    const diskInfo = try os_module.getDiskSize("/");
+    const diskInfo = try detection.getDiskSize("/");
     try stdout.print("disk ({s}): {d:.2} / {d:.2} GB ({}%)\n", .{ diskInfo.disk_path, diskInfo.disk_usage, diskInfo.disk_size, diskInfo.disk_usage_percentage });
     try bw.flush();
 
-    const terminal_name = try os_module.getTerminalName(allocator);
+    const terminal_name = try detection.getTerminalName(allocator);
     try stdout.print("terminal: {s}\n", .{terminal_name});
     try bw.flush();
     allocator.free(terminal_name);
 
-    const net_info_list = try os_module.getNetInfo(allocator);
+    const net_info_list = try detection.getNetInfo(allocator);
     for (net_info_list.items) |n| {
         try stdout.print("Local IP ({s}): {s}\n", .{ n.interface_name, n.ipv4_addr });
         try bw.flush();
