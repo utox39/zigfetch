@@ -30,6 +30,11 @@ pub fn main() !void {
     try bw.flush();
     allocator.free(hostname);
 
+    const locale = try os_module.getLocale(allocator);
+    try stdout.print("Locale: {s}\n", .{locale});
+    try bw.flush();
+    allocator.free(locale);
+
     const uptime = try os_module.getSystemUptime();
     try stdout.print("Uptime: {} days, {} hours, {} minutes\n", .{ uptime.days, uptime.hours, uptime.minutes });
     try bw.flush();
