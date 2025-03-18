@@ -270,7 +270,9 @@ pub fn getRamInfo() !RamInfo {
     }
 
     const page_size: u64 = std.heap.page_size_min;
-    const ram_usage = (info.active_count + info.wire_count) * page_size;
+
+    // https://github.com/fastfetch-cli/fastfetch/blob/dev/src/detection/memory/memory_apple.c
+    const ram_usage = (info.active_count + info.inactive_count + info.speculative_count + info.wire_count + info.compressor_page_count - info.purgeable_count - info.external_page_count) * page_size;
 
     // Converts Bytes to Gigabytes
     const ram_usage_gb: f64 = @as(f64, @floatFromInt(ram_usage)) / (1024 * 1024 * 1024);
