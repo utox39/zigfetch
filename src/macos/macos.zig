@@ -76,6 +76,11 @@ pub fn getHostname(allocator: std.mem.Allocator) ![]u8 {
     return hostname;
 }
 
+pub fn getLocale(allocator: std.mem.Allocator) ![]u8 {
+    const locale = try std.process.getEnvVarOwned(allocator, "LANG");
+    return locale;
+}
+
 /// Returns the system uptime.
 ///
 /// Uses `sysctl` to fetch the system boot time and calculates the elapsed time.
