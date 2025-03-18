@@ -1,5 +1,5 @@
 const std = @import("std");
-const os_module = @import("root.zig").os_module;
+const os_module = @import("detection.zig").os_module;
 
 pub fn main() !void {
     const stdout_file = std.io.getStdOut().writer();
