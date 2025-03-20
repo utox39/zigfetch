@@ -22,6 +22,7 @@ pub const SystemUptime = struct {
 pub const CpuInfo = struct {
     cpu_name: []u8,
     cpu_cores: i32,
+    cpu_max_freq: f64,
 };
 
 pub const GpuInfo = struct {
@@ -160,12 +161,85 @@ pub fn getCpuInfo(allocator: std.mem.Allocator) !CpuInfo {
         return error.FailedToGetPhysicalCpuInfo;
     }
 
-    // TODO: add cpu frequency (find a way to get it even on Apple Silicon)
+    // TODO: add cpu frequency for Intel
 
-    return CpuInfo{
-        .cpu_name = cpu_name,
-        .cpu_cores = n_cpu,
-    };
+    const cpu_freq_mhz = try getCpuFreqAppleSilicon();
+
+    const cpu_freq_ghz = @floor(cpu_freq_mhz) / 1000;
+
+    return CpuInfo{ .cpu_name = cpu_name, .cpu_cores = n_cpu, .cpu_max_freq = cpu_freq_ghz };
+}
+
+fn getCpuFreqAppleSilicon() !f64 {
+    // https://github.com/fastfetch-cli/fastfetch/blob/dev/src/detection/cpu/cpu_apple.c
+
+    // Retrieve the matching service for "pmgr"
+    // https://developer.apple.com/documentation/iokit/1514535-ioservicegetmatchingservice
+    const service = c_iokit.IOServiceGetMatchingService(c_iokit.kIOMasterPortDefault, c_iokit.IOServiceNameMatching("pmgr"));
+    if (service == c_iokit.FALSE) return error.NoMatchingService;
+    defer _ = c_iokit.IOObjectRelease(service);
+
+    // Check that the service conforms to "AppleARMIODevice"
+    // https://developer.apple.com/documentation/iokit/1514505-ioobjectconformsto
+    if (c_iokit.IOObjectConformsTo(service, "AppleARMIODevice") == c_iokit.FALSE) {
+        return error.NotAppleARMIODevice;
+    }
+
+    // CFSTR is a macro and can't be translated by Zig
+    // The CFString is created "manually"
+    const vs5s_key = c_iokit.CFStringCreateWithCString(c_iokit.kCFAllocatorDefault, "voltage-states5-sram", c_iokit.kCFStringEncodingUTF8);
+    if (vs5s_key == null) {
+        return error.FailedToCreateCFKey;
+    }
+    defer c_iokit.CFRelease(vs5s_key);
+
+    // Retrieve the property from the registry entry
+    // https://developer.apple.com/documentation/iokit/1514293-ioregistryentrycreatecfproperty
+    const freq_property = c_iokit.IORegistryEntryCreateCFProperty(service, vs5s_key, c_iokit.kCFAllocatorDefault, 0);
+    if (freq_property == null) return error.PropertyNotFound;
+    defer c_iokit.CFRelease(freq_property);
+
+    // Ensure the property is a CFData object
+    if (c_iokit.CFGetTypeID(freq_property) != c_cf.CFDataGetTypeID())
+        return error.InvalidPropertyType;
+
+    const freq_data = @as(*const c_iokit.__CFData, @ptrCast(freq_property));
+
+    // Get the length of the CFData
+    const freq_data_length = c_iokit.CFDataGetLength(freq_data);
+
+    // voltage-states5-sram stores supported <frequency / voltage> pairs of pcores from the lowest to the highest
+    if (freq_data_length == 0 or @as(u32, @intCast(freq_data_length)) % (@sizeOf(u32) * 2) != 0)
+        return error.InvalidVoltageStates5SramLength;
+
+    // Get data pointer
+    const freq_data_ptr = c_iokit.CFDataGetBytePtr(freq_data);
+    if (freq_data_ptr == null)
+        return error.InvalidVoltageStates5SramData;
+
+    const freq_array = @as([*]const u32, @ptrCast(@alignCast(freq_data_ptr)));
+
+    // The first element contains the minimum freq
+    var p_max: u32 = freq_array[0];
+
+    const total_elements = @as(u32, @intCast(freq_data_length)) / @sizeOf(u32);
+
+    // Iterate on values, starting at index 2, skipping voltage (each pair is <frequency, voltage>)
+    var i: usize = 2;
+    while (i < total_elements) : (i += 2) {
+        const current = freq_array[i];
+        if (current == 0) break;
+        if (current > p_max) {
+            p_max = current;
+        }
+    }
+
+    // Assume that p_max is in Hz, M1~M3
+    if (p_max > 100_000_000) {
+        return @as(f64, @floatFromInt(p_max)) / 1_000 / 1_000;
+    } else { // Assume that p_max is in kHz, M4 and later
+        return @as(f64, @floatFromInt(p_max)) / 1_000;
+    }
 }
 
 /// Returns the gpu info.
