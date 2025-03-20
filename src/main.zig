@@ -45,7 +45,7 @@ pub fn main() !void {
     allocator.free(shell);
 
     const cpu_info = try detection.getCpuInfo(allocator);
-    try stdout.print("cpu: {s} ({})\n", .{ cpu_info.cpu_name, cpu_info.cpu_cores });
+    try stdout.print("cpu: {s} ({}) @ {d:.2} GHz\n", .{ cpu_info.cpu_name, cpu_info.cpu_cores, cpu_info.cpu_max_freq });
     try bw.flush();
     allocator.free(cpu_info.cpu_name);
 
