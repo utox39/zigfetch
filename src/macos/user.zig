@@ -1,6 +1,6 @@
 const std = @import("std");
 
-/// Returns the current logged-in uesr's username.
+/// Returns the current logged-in user's username.
 /// Uses the environment variable `USER`.
 /// The caller is responsible for freeing the allocated memory.
 pub fn getUsername(allocator: std.mem.Allocator) ![]u8 {
