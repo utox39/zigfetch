@@ -50,7 +50,7 @@ pub fn main() !void {
     allocator.free(cpu_info.cpu_name);
 
     const gpu_info = try detection.hardware.getGpuInfo(allocator);
-    try stdout.print("gpu: {s} ({})\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores });
+    try stdout.print("gpu: {s} ({}) @ {d:.2} GHz\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores, gpu_info.gpu_freq });
     try bw.flush();
     allocator.free(gpu_info.gpu_name);
 
