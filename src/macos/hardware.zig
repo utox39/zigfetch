@@ -218,14 +218,14 @@ pub fn getGpuInfo(allocator: std.mem.Allocator) !GpuInfo {
         }
     }
 
-    const gpu_freq_mhz = try getGpuFreq();
+    const gpu_freq_mhz = try getAppleSiliconGpuFreq();
     const gpu_freq_ghz = @floor(gpu_freq_mhz) / 1000;
     gpu_info.gpu_freq = gpu_freq_ghz;
 
     return gpu_info;
 }
 
-fn getGpuFreq() !f64 {
+fn getAppleSiliconGpuFreq() !f64 {
     // https://github.com/fastfetch-cli/fastfetch/blob/dev/src/detection/gpu/gpu_apple.c
 
     // Retrieve the matching service for "pmgr"
