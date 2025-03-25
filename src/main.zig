@@ -39,6 +39,12 @@ pub fn main() !void {
     try stdout.print("Uptime: {} days, {} hours, {} minutes\n", .{ uptime.days, uptime.hours, uptime.minutes });
     try bw.flush();
 
+    const packages_info = try detection.packages.getPackagesInfo(allocator);
+    defer allocator.free(packages_info);
+
+    try stdout.print("packages: {s}\n", .{packages_info});
+    try bw.flush();
+
     const shell = try detection.user.getShell(allocator);
     try stdout.print("Shell: {s}", .{shell});
     try bw.flush();
