@@ -21,3 +21,17 @@ pub fn cfStringToZigString(allocator: std.mem.Allocator, cf_string: c_iokit.CFSt
 
     return allocator.realloc(buffer, actual_len);
 }
+
+pub fn countEntries(dir_path: []const u8) !usize {
+    var dir = try std.fs.openDirAbsolute(dir_path, .{ .iterate = true });
+    defer dir.close();
+
+    var count: usize = 0;
+    var iter = dir.iterate();
+
+    while (try iter.next()) |_| {
+        count += 1;
+    }
+
+    return count;
+}
