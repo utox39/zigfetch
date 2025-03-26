@@ -14,7 +14,7 @@ pub fn getPackagesInfo(allocator: std.mem.Allocator) ![]const u8 {
 
     if (homebrew_packages > 0) {
         try std.fmt.formatInt(homebrew_packages, 10, .lower, .{}, fbs.writer());
-        try packages_info.appendSlice("brew: ");
+        try packages_info.appendSlice(" brew: ");
         try packages_info.appendSlice(fbs.getWritten());
     }
 
