@@ -7,6 +7,7 @@ pub fn getPackagesInfo(allocator: std.mem.Allocator) ![]const u8 {
 
     const homebrew_packages = try countHomebrewPackages();
     const homebrew_casks = try countHomebrewCasks();
+    const macports_packages = try countMacportPackages();
 
     var buffer: [10]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
@@ -24,6 +25,13 @@ pub fn getPackagesInfo(allocator: std.mem.Allocator) ![]const u8 {
         try packages_info.appendSlice(fbs.getWritten());
     }
 
+    if (macports_packages > 0) {
+        fbs.reset();
+        try std.fmt.formatInt(macports_packages, 10, .lower, .{}, fbs.writer());
+        try packages_info.appendSlice(" macports: ");
+        try packages_info.appendSlice(fbs.getWritten());
+    }
+
     return try allocator.dupe(u8, packages_info.items);
 }
 
@@ -33,4 +41,8 @@ fn countHomebrewPackages() !usize {
 
 fn countHomebrewCasks() !usize {
     return try utils.countEntries("/opt/homebrew/Caskroom");
+}
+
+fn countMacportPackages() !usize {
+    return try utils.countEntries("/opt/local/bin");
 }
