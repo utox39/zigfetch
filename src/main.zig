@@ -42,7 +42,7 @@ pub fn main() !void {
     const packages_info = try detection.packages.getPackagesInfo(allocator);
     defer allocator.free(packages_info);
 
-    try stdout.print("packages: {s}\n", .{packages_info});
+    try stdout.print("packages:{s}\n", .{packages_info});
     try bw.flush();
 
     const shell = try detection.user.getShell(allocator);
