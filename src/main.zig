@@ -40,10 +40,9 @@ pub fn main() !void {
     try bw.flush();
 
     const packages_info = try detection.packages.getPackagesInfo(allocator);
-    defer allocator.free(packages_info);
-
     try stdout.print("packages:{s}\n", .{packages_info});
     try bw.flush();
+    allocator.free(packages_info);
 
     const shell = try detection.user.getShell(allocator);
     try stdout.print("Shell: {s}", .{shell});
