@@ -5,9 +5,9 @@ pub fn getPackagesInfo(allocator: std.mem.Allocator) ![]const u8 {
     var packages_info = std.ArrayList(u8).init(allocator);
     defer packages_info.deinit();
 
-    const homebrew_packages = try countHomebrewPackages();
-    const homebrew_casks = try countHomebrewCasks();
-    const macports_packages = try countMacportPackages();
+    const homebrew_packages = countHomebrewPackages() catch |err| if (err == error.FileNotFound) 0 else return err;
+    const homebrew_casks = countHomebrewCasks() catch |err| if (err == error.FileNotFound) 0 else return err;
+    const macports_packages = countMacportPackages() catch |err| if (err == error.FileNotFound) 0 else return err;
 
     var buffer: [10]u8 = undefined;
     var fbs = std.io.fixedBufferStream(&buffer);
