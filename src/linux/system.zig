@@ -76,10 +76,10 @@ pub fn getOsInfo(allocator: std.mem.Allocator) ![]u8 {
 
     var pretty_name: ?[]const u8 = null;
 
-    var lines = std.mem.split(u8, os_release_data, "\n");
+    var lines = std.mem.splitScalar(u8, os_release_data, '\n');
     while (lines.next()) |line| {
         if (std.mem.startsWith(u8, line, "PRETTY_NAME")) {
-            var parts = std.mem.split(u8, line, "=");
+            var parts = std.mem.splitScalar(u8, line, '=');
             _ = parts.next(); // discard the key
             if (parts.next()) |value| {
                 pretty_name = std.mem.trim(u8, value, "\"");
