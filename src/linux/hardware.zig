@@ -1,5 +1,6 @@
 const std = @import("std");
 const c_unistd = @cImport(@cInclude("unistd.h"));
+const c_statvfs = @cImport(@cInclude("sys/statvfs.h"));
 
 pub const CpuInfo = struct {
     cpu_name: []u8,
@@ -11,6 +12,13 @@ pub const RamInfo = struct {
     ram_size: f64,
     ram_usage: f64,
     ram_usage_percentage: u8,
+};
+
+pub const DiskInfo = struct {
+    disk_path: []const u8,
+    disk_size: f64,
+    disk_usage: f64,
+    disk_usage_percentage: u8,
 };
 
 pub fn getCpuInfo(allocator: std.mem.Allocator) !CpuInfo {
@@ -117,5 +125,25 @@ pub fn getRamInfo(allocator: std.mem.Allocator) !RamInfo {
         .ram_size = total_mem,
         .ram_usage = used_mem,
         .ram_usage_percentage = ram_usage_percentage,
+    };
+}
+
+pub fn getDiskSize(disk_path: []const u8) !DiskInfo {
+    var stat: c_statvfs.struct_statvfs = undefined;
+    if (c_statvfs.statvfs(disk_path.ptr, &stat) != 0) {
+        return error.StatvfsFailed;
+    }
+
+    const total_size = stat.f_blocks * stat.f_frsize;
+    const free_size = stat.f_bavail * stat.f_frsize;
+    const used_size = total_size - free_size;
+
+    const used_size_percentage = (used_size * 100) / total_size;
+
+    return DiskInfo{
+        .disk_path = disk_path,
+        .disk_size = @as(f64, @floatFromInt(total_size)) / 1e9,
+        .disk_usage = @as(f64, @floatFromInt(used_size)) / 1e9,
+        .disk_usage_percentage = @as(u8, @intCast(used_size_percentage)),
     };
 }
