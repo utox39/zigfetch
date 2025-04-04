@@ -93,7 +93,7 @@ pub fn getRamInfo(allocator: std.mem.Allocator) !RamInfo {
                 free_mem = try std.fmt.parseFloat(f64, free_mem_str.?);
             }
         } else if (std.mem.startsWith(u8, trimmed, "MemAvailable")) {
-            var parts = std.mem.splitScalar(u8, trimmed,  ':');
+            var parts = std.mem.splitScalar(u8, trimmed, ':');
             _ = parts.next(); // discards the key
             if (parts.next()) |value| {
                 available_mem_str = std.mem.trim(u8, value[0..(value.len - 3)], " ");
