@@ -14,6 +14,12 @@ pub const RamInfo = struct {
     ram_usage_percentage: u8,
 };
 
+pub const SwapInfo = struct {
+    swap_size: f64,
+    swap_usage: f64,
+    swap_usage_percentage: u8,
+};
+
 pub const DiskInfo = struct {
     disk_path: []const u8,
     disk_size: f64,
@@ -125,6 +131,64 @@ pub fn getRamInfo(allocator: std.mem.Allocator) !RamInfo {
         .ram_size = total_mem,
         .ram_usage = used_mem,
         .ram_usage_percentage = ram_usage_percentage,
+    };
+}
+
+pub fn getSwapInfo(allocator: std.mem.Allocator) !?SwapInfo {
+    // Reads /proc/meminfo
+    const meminfo_path = "/proc/meminfo";
+    const file = try std.fs.cwd().openFile(meminfo_path, .{});
+    defer file.close();
+    const meminfo_data = try file.readToEndAlloc(allocator, std.math.maxInt(usize));
+    defer allocator.free(meminfo_data);
+
+    // Parsing /proc/meminfo
+    var total_swap: f64 = 0.0;
+    var free_swap: f64 = 0.0;
+
+    var total_swap_str: ?[]const u8 = null;
+    var free_swap_str: ?[]const u8 = null;
+
+    var lines = std.mem.splitScalar(u8, meminfo_data, '\n');
+    while (lines.next()) |line| {
+        const trimmed = std.mem.trim(u8, line, " \t");
+        if (std.mem.startsWith(u8, trimmed, "SwapTotal")) {
+            var parts = std.mem.splitScalar(u8, trimmed, ':');
+            _ = parts.next(); // discards the key
+            if (parts.next()) |value| {
+                total_swap_str = std.mem.trim(u8, value[0..(value.len - 3)], " ");
+                total_swap = try std.fmt.parseFloat(f64, total_swap_str.?);
+            }
+        } else if (std.mem.startsWith(u8, trimmed, "SwapFree")) {
+            var parts = std.mem.splitScalar(u8, trimmed, ':');
+            _ = parts.next(); // discards the key
+            if (parts.next()) |value| {
+                free_swap_str = std.mem.trim(u8, value[0..(value.len - 3)], " ");
+                free_swap = try std.fmt.parseFloat(f64, free_swap_str.?);
+            }
+        }
+
+        if ((total_swap_str != null) and (free_swap_str != null)) {
+            break;
+        }
+    }
+
+    var used_swap = total_swap - free_swap;
+
+    // Converts KB in GB
+    total_swap /= (1024 * 1024);
+    used_swap /= (1024 * 1024);
+
+    if (used_swap == 0) {
+        return null;
+    }
+
+    const swap_usage_percentage: u8 = @as(u8, @intFromFloat((used_swap * 100) / total_swap));
+
+    return SwapInfo{
+        .swap_size = total_swap,
+        .swap_usage = used_swap,
+        .swap_usage_percentage = swap_usage_percentage,
     };
 }
 
