@@ -344,7 +344,7 @@ pub fn getSwapInfo() !?SwapInfo {
     }
 
     const swap_size = @as(f64, @floatFromInt(swap.xsu_total / (1024 * 1024 * 1024)));
-    const swap_usage = @as(f64, @floatFromInt(swap.xsu_used / (1024 * 1024 * 1024)));
+    const swap_usage = @as(f64, @floatFromInt(swap.xsu_used)) / (1024 * 1024 * 1024);
     var swap_usage_percentage: u64 = 0;
     if (@as(u64, swap.xsu_total) != 0) {
         swap_usage_percentage = (@as(u64, swap.xsu_used) * 100) / @as(u64, swap.xsu_total);
