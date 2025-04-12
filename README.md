@@ -30,5 +30,11 @@ $ mv zigfetch ~/bin
 $ zigfetch
 ```
 
+## Roadtrip
+
+- Add ASCII art for each operating system and linux distro
+- Add GPU info for Linux
+- Add packages info for Linux
+
 ## Contributing
 If you would like to contribute to this project just create a pull request which I will try to review as soon as possible.
