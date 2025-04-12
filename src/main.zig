@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const detection = @import("detection.zig").os_module;
 
 pub fn main() !void {
@@ -39,10 +40,15 @@ pub fn main() !void {
     try stdout.print("Uptime: {} days, {} hours, {} minutes\n", .{ uptime.days, uptime.hours, uptime.minutes });
     try bw.flush();
 
-    const packages_info = try detection.packages.getPackagesInfo(allocator);
-    try stdout.print("packages:{s}\n", .{packages_info});
-    try bw.flush();
-    allocator.free(packages_info);
+    if (builtin.os.tag == .macos) {
+        const packages_info = try detection.packages.getPackagesInfo(allocator);
+        try stdout.print("packages:{s}\n", .{packages_info});
+        try bw.flush();
+        allocator.free(packages_info);
+    } else if (builtin.os.tag == .linux) {
+        try stdout.print("packages: WIP\n", .{});
+        try bw.flush();
+    }
 
     const shell = try detection.user.getShell(allocator);
     try stdout.print("Shell: {s}", .{shell});
@@ -54,22 +60,46 @@ pub fn main() !void {
     try bw.flush();
     allocator.free(cpu_info.cpu_name);
 
-    const gpu_info = try detection.hardware.getGpuInfo(allocator);
-    try stdout.print("gpu: {s} ({}) @ {d:.2} GHz\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores, gpu_info.gpu_freq });
-    try bw.flush();
-    allocator.free(gpu_info.gpu_name);
+    if (builtin.os.tag == .macos) {
+        const gpu_info = try detection.hardware.getGpuInfo(allocator);
+        try stdout.print("gpu: {s} ({}) @ {d:.2} GHz\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores, gpu_info.gpu_freq });
+        try bw.flush();
+        allocator.free(gpu_info.gpu_name);
+    } else if (builtin.os.tag == .linux) {
+        try stdout.print("gpu: WIP\n", .{});
+        try bw.flush();
+    }
 
-    const ram_info = try detection.hardware.getRamInfo();
+    var ram_info = detection.hardware.RamInfo{
+        .ram_size = 0.0,
+        .ram_usage = 0.0,
+        .ram_usage_percentage = 0,
+    };
+    if (builtin.os.tag == .macos) {
+        ram_info = try detection.hardware.getRamInfo();
+    } else if (builtin.os.tag == .linux) {
+        ram_info = try detection.hardware.getRamInfo(allocator);
+    }
     try stdout.print("ram: {d:.2} / {d:.2} GB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
     try bw.flush();
 
-    const swap_info = try detection.hardware.getSwapInfo();
-    if (swap_info) |s| {
-        try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
-    } else {
-        try stdout.print("Swap: Disabled\n", .{});
+    if (builtin.os.tag == .macos) {
+        const swap_info = try detection.hardware.getSwapInfo();
+        if (swap_info) |s| {
+            try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
+        } else {
+            try stdout.print("Swap: Disabled\n", .{});
+        }
+        try bw.flush();
+    } else if (builtin.os.tag == .linux) {
+        const swap_info = try detection.hardware.getSwapInfo(allocator);
+        if (swap_info) |s| {
+            try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
+        } else {
+            try stdout.print("Swap: Disabled\n", .{});
+        }
+        try bw.flush();
     }
-    try bw.flush();
 
     const diskInfo = try detection.hardware.getDiskSize("/");
     try stdout.print("disk ({s}): {d:.2} / {d:.2} GB ({}%)\n", .{ diskInfo.disk_path, diskInfo.disk_usage, diskInfo.disk_size, diskInfo.disk_usage_percentage });
