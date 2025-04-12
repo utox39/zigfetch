@@ -42,11 +42,11 @@ pub fn main() !void {
 
     if (builtin.os.tag == .macos) {
         const packages_info = try detection.packages.getPackagesInfo(allocator);
-        try stdout.print("packages:{s}\n", .{packages_info});
+        try stdout.print("Packages:{s}\n", .{packages_info});
         try bw.flush();
         allocator.free(packages_info);
     } else if (builtin.os.tag == .linux) {
-        try stdout.print("packages: WIP\n", .{});
+        try stdout.print("Packages: WIP\n", .{});
         try bw.flush();
     }
 
@@ -56,17 +56,17 @@ pub fn main() !void {
     allocator.free(shell);
 
     const cpu_info = try detection.hardware.getCpuInfo(allocator);
-    try stdout.print("cpu: {s} ({}) @ {d:.2} GHz\n", .{ cpu_info.cpu_name, cpu_info.cpu_cores, cpu_info.cpu_max_freq });
+    try stdout.print("Cpu: {s} ({}) @ {d:.2} GHz\n", .{ cpu_info.cpu_name, cpu_info.cpu_cores, cpu_info.cpu_max_freq });
     try bw.flush();
     allocator.free(cpu_info.cpu_name);
 
     if (builtin.os.tag == .macos) {
         const gpu_info = try detection.hardware.getGpuInfo(allocator);
-        try stdout.print("gpu: {s} ({}) @ {d:.2} GHz\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores, gpu_info.gpu_freq });
+        try stdout.print("Gpu: {s} ({}) @ {d:.2} GHz\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores, gpu_info.gpu_freq });
         try bw.flush();
         allocator.free(gpu_info.gpu_name);
     } else if (builtin.os.tag == .linux) {
-        try stdout.print("gpu: WIP\n", .{});
+        try stdout.print("Gpu: WIP\n", .{});
         try bw.flush();
     }
 
@@ -80,7 +80,7 @@ pub fn main() !void {
     } else if (builtin.os.tag == .linux) {
         ram_info = try detection.hardware.getRamInfo(allocator);
     }
-    try stdout.print("ram: {d:.2} / {d:.2} GB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
+    try stdout.print("Ram: {d:.2} / {d:.2} GB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
     try bw.flush();
 
     if (builtin.os.tag == .macos) {
@@ -102,11 +102,11 @@ pub fn main() !void {
     }
 
     const diskInfo = try detection.hardware.getDiskSize("/");
-    try stdout.print("disk ({s}): {d:.2} / {d:.2} GB ({}%)\n", .{ diskInfo.disk_path, diskInfo.disk_usage, diskInfo.disk_size, diskInfo.disk_usage_percentage });
+    try stdout.print("Disk ({s}): {d:.2} / {d:.2} GB ({}%)\n", .{ diskInfo.disk_path, diskInfo.disk_usage, diskInfo.disk_size, diskInfo.disk_usage_percentage });
     try bw.flush();
 
     const terminal_name = try detection.user.getTerminalName(allocator);
-    try stdout.print("terminal: {s}\n", .{terminal_name});
+    try stdout.print("Terminal: {s}\n", .{terminal_name});
     try bw.flush();
     allocator.free(terminal_name);
 
