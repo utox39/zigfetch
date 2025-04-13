@@ -32,7 +32,7 @@ $ zigfetch
 
 ## Roadtrip
 
-- [ ] Add ASCII art for each operating system and linux distro
+- [ ] Add ASCII art for each operating system and Linux distro
 - [ ] Add GPU info for Linux
 - [ ] Add packages info for Linux
 - [ ] Add user customization
