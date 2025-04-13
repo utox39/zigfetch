@@ -15,7 +15,7 @@ Zigfetch is a minimal [neofetch](https://github.com/dylanaraps/neofetch)/[fastfe
 $ git clone https://github.com/utox39/zigfetch.git
 
 # cd to the path
-cd path/to/zigfetch
+$ cd path/to/zigfetch
 
 # Build zigfetch
 $ zig build -Doptimize=ReleaseSafe run
