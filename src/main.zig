@@ -83,23 +83,13 @@ pub fn main() !void {
     try stdout.print("Ram: {d:.2} / {d:.2} GB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
     try bw.flush();
 
-    if (builtin.os.tag == .macos) {
-        const swap_info = try detection.hardware.getSwapInfo();
-        if (swap_info) |s| {
-            try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
-        } else {
-            try stdout.print("Swap: Disabled\n", .{});
-        }
-        try bw.flush();
-    } else if (builtin.os.tag == .linux) {
-        const swap_info = try detection.hardware.getSwapInfo(allocator);
-        if (swap_info) |s| {
-            try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
-        } else {
-            try stdout.print("Swap: Disabled\n", .{});
-        }
-        try bw.flush();
+    const swap_info = if (builtin.os.tag == .macos) try detection.hardware.getSwapInfo() else if (builtin.os.tag == .linux) try detection.hardware.getSwapInfo(allocator);
+    if (swap_info) |s| {
+        try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
+    } else {
+        try stdout.print("Swap: Disabled\n", .{});
     }
+    try bw.flush();
 
     const diskInfo = try detection.hardware.getDiskSize("/");
     try stdout.print("Disk ({s}): {d:.2} / {d:.2} GB ({}%)\n", .{ diskInfo.disk_path, diskInfo.disk_usage, diskInfo.disk_size, diskInfo.disk_usage_percentage });
