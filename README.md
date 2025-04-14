@@ -18,10 +18,10 @@ $ git clone https://github.com/utox39/zigfetch.git
 $ cd path/to/zigfetch
 
 # Build zigfetch
-$ zig build -Doptimize=ReleaseSafe run
+$ zig build -Doptimize=ReleaseSafe
 
 # Then move it somewhere in your $PATH. Here is an example:
-$ mv zigfetch ~/bin
+$ mv ./zig-out/zigfetch ~/bin
 ```
 
 ## Usage
