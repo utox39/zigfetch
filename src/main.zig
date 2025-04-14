@@ -80,12 +80,12 @@ pub fn main() !void {
     } else if (builtin.os.tag == .linux) {
         ram_info = try detection.hardware.getRamInfo(allocator);
     }
-    try stdout.print("Ram: {d:.2} / {d:.2} GB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
+    try stdout.print("Ram: {d:.2} / {d:.2} GiB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
     try bw.flush();
 
     const swap_info = if (builtin.os.tag == .macos) try detection.hardware.getSwapInfo() else if (builtin.os.tag == .linux) try detection.hardware.getSwapInfo(allocator);
     if (swap_info) |s| {
-        try stdout.print("Swap: {d:.2} / {d:.2} GB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
+        try stdout.print("Swap: {d:.2} / {d:.2} GiB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
     } else {
         try stdout.print("Swap: Disabled\n", .{});
     }
