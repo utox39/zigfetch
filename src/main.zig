@@ -9,6 +9,7 @@ pub fn main() !void {
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
+    defer _ = gpa.deinit();
 
     const kernel_info = try detection.system.getKernelInfo(allocator);
     try stdout.print("Kernel: {s} {s}\n", .{ kernel_info.kernel_name, kernel_info.kernel_release });
