@@ -9,6 +9,7 @@ pub fn getShell(allocator: std.mem.Allocator) ![]u8 {
     const shell = try std.process.getEnvVarOwned(allocator, "SHELL");
 
     var child = std.process.Child.init(&[_][]const u8{ shell, "--version" }, allocator);
+    defer allocator.free(shell);
 
     child.stdout_behavior = .Pipe;
     child.stderr_behavior = .Pipe;
