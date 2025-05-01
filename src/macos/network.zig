@@ -8,6 +8,10 @@ const c_socket = @cImport(@cInclude("sys/socket.h"));
 pub const NetInfo = struct {
     interface_name: []u8,
     ipv4_addr: []u8,
+
+    pub fn toStr(self: NetInfo, buf: []u8) ![]u8 {
+        return std.fmt.bufPrint(buf, "Local IP ({s}): {s}", .{ self.interface_name, self.ipv4_addr });
+    }
 };
 
 pub fn getNetInfo(allocator: std.mem.Allocator) !std.ArrayList(NetInfo) {
