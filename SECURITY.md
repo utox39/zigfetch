@@ -9,7 +9,7 @@
 ## Reporting a Vulnerability
 
 To report a security vulnerability go
-to [Advisories section](https://github.com/utox39/z8x/security/advisories) or contact this email address:
+to [Advisories section](https://github.com/utox39/zigfetch/security/advisories) or contact this email address:
 francescomoccaldi39@gmail.com
 
 1. Describe the vulnerability.
