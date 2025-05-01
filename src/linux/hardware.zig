@@ -6,18 +6,30 @@ pub const CpuInfo = struct {
     cpu_name: []u8,
     cpu_cores: i32,
     cpu_max_freq: f32,
+
+    pub fn toStr(self: CpuInfo, buf: []u8) ![]u8 {
+        return std.fmt.bufPrint(buf, "Cpu: {s} ({}) @ {d:.2} GHz", .{ self.cpu_name, self.cpu_cores, self.cpu_max_freq });
+    }
 };
 
 pub const RamInfo = struct {
     ram_size: f64,
     ram_usage: f64,
     ram_usage_percentage: u8,
+
+    pub fn toStr(self: RamInfo, buf: []u8) ![]u8 {
+        return std.fmt.bufPrint(buf, "Ram: {d:.2} / {d:.2} GiB ({}%)", .{ self.ram_usage, self.ram_size, self.ram_usage_percentage });
+    }
 };
 
 pub const SwapInfo = struct {
     swap_size: f64,
     swap_usage: f64,
     swap_usage_percentage: u8,
+
+    pub fn toStr(self: SwapInfo, buf: []u8) ![]u8 {
+        return std.fmt.bufPrint(buf, "Swap: {d:.2} / {d:.2} GiB ({}%)", .{ self.swap_usage, self.swap_size, self.swap_usage_percentage });
+    }
 };
 
 pub const DiskInfo = struct {
@@ -25,6 +37,10 @@ pub const DiskInfo = struct {
     disk_size: f64,
     disk_usage: f64,
     disk_usage_percentage: u8,
+
+    pub fn toStr(self: DiskInfo, buf: []u8) ![]u8 {
+        return std.fmt.bufPrint(buf, "Disk ({s}): {d:.2} / {d:.2} GB ({}%)", .{ self.disk_path, self.disk_usage, self.disk_size, self.disk_usage_percentage });
+    }
 };
 
 pub fn getCpuInfo(allocator: std.mem.Allocator) !CpuInfo {

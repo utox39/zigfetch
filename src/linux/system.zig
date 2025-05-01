@@ -7,11 +7,19 @@ pub const SystemUptime = struct {
     days: i8,
     hours: i8,
     minutes: i8,
+
+    pub fn toStr(self: SystemUptime, buf: []u8) ![]u8 {
+        return std.fmt.bufPrint(buf, "Uptime: {} days, {} hours, {} minutes", .{ self.days, self.hours, self.minutes });
+    }
 };
 
 pub const KernelInfo = struct {
     kernel_name: []u8,
     kernel_release: []u8,
+
+    pub fn toStr(self: KernelInfo, buf: []u8) ![]u8 {
+        return std.fmt.bufPrint(buf, "Kernel: {s} {s}", .{ self.kernel_name, self.kernel_release });
+    }
 };
 
 pub fn getHostname(allocator: std.mem.Allocator) ![]u8 {
