@@ -1,74 +1,66 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const detection = @import("detection.zig").os_module;
+const ascii = @import("ascii.zig");
 
 pub fn main() !void {
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
-
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
+    var sys_info_list = std.ArrayList([]u8).init(allocator);
+    defer sys_info_list.deinit();
+
+    var buf: [1024]u8 = undefined;
+
+    const username = try detection.user.getUsername(allocator);
+    const hostname = try detection.system.getHostname(allocator);
+    try sys_info_list.append(try allocator.dupe(u8, try std.fmt.bufPrint(&buf, "{s}@{s}", .{ username, hostname })));
+    allocator.free(hostname);
+    allocator.free(username);
+
+    const separtor_buffer = try allocator.alloc(u8, username.len + hostname.len + 1);
+    @memset(separtor_buffer, '-');
+    try sys_info_list.append(separtor_buffer);
+
     const kernel_info = try detection.system.getKernelInfo(allocator);
-    try stdout.print("Kernel: {s} {s}\n", .{ kernel_info.kernel_name, kernel_info.kernel_release });
-    try bw.flush();
+    try sys_info_list.append(try allocator.dupe(u8, try kernel_info.toStr(&buf)));
     allocator.free(kernel_info.kernel_name);
     allocator.free(kernel_info.kernel_release);
 
     const os_info = try detection.system.getOsInfo(allocator);
-    try stdout.print("OS: {s}\n", .{os_info});
-    try bw.flush();
+    try sys_info_list.append(try allocator.dupe(u8, try std.fmt.bufPrint(&buf, "OS: {s}", .{os_info})));
     allocator.free(os_info);
 
-    const username = try detection.user.getUsername(allocator);
-    try stdout.print("User: {s}\n", .{username});
-    try bw.flush();
-    allocator.free(username);
-
-    const hostname = try detection.system.getHostname(allocator);
-    try stdout.print("Hostname: {s}\n", .{hostname});
-    try bw.flush();
-    allocator.free(hostname);
-
     const locale = try detection.system.getLocale(allocator);
-    try stdout.print("Locale: {s}\n", .{locale});
-    try bw.flush();
+    try sys_info_list.append(try allocator.dupe(u8, try std.fmt.bufPrint(&buf, "Locale: {s}", .{locale})));
     allocator.free(locale);
 
     const uptime = try detection.system.getSystemUptime();
-    try stdout.print("Uptime: {} days, {} hours, {} minutes\n", .{ uptime.days, uptime.hours, uptime.minutes });
-    try bw.flush();
+    try sys_info_list.append(try allocator.dupe(u8, try uptime.toStr(&buf)));
 
     if (builtin.os.tag == .macos) {
         const packages_info = try detection.packages.getPackagesInfo(allocator);
-        try stdout.print("Packages:{s}\n", .{packages_info});
-        try bw.flush();
+        try sys_info_list.append(try allocator.dupe(u8, try std.fmt.bufPrint(&buf, "Packages:{s}", .{packages_info})));
         allocator.free(packages_info);
     } else if (builtin.os.tag == .linux) {
-        try stdout.print("Packages: WIP\n", .{});
-        try bw.flush();
+        try sys_info_list.append(try allocator.dupe(u8, try std.fmt.bufPrint(&buf, "Packages: WIP", .{})));
     }
 
     const shell = try detection.user.getShell(allocator);
-    try stdout.print("Shell: {s}", .{shell});
-    try bw.flush();
+    try sys_info_list.append(try allocator.dupe(u8, try std.fmt.bufPrint(&buf, "Shell: {s}", .{shell[0..(shell.len - 1)]})));
     allocator.free(shell);
 
     const cpu_info = try detection.hardware.getCpuInfo(allocator);
-    try stdout.print("Cpu: {s} ({}) @ {d:.2} GHz\n", .{ cpu_info.cpu_name, cpu_info.cpu_cores, cpu_info.cpu_max_freq });
-    try bw.flush();
+    try sys_info_list.append(try allocator.dupe(u8, try cpu_info.toStr(&buf)));
     allocator.free(cpu_info.cpu_name);
 
     if (builtin.os.tag == .macos) {
         const gpu_info = try detection.hardware.getGpuInfo(allocator);
-        try stdout.print("Gpu: {s} ({}) @ {d:.2} GHz\n", .{ gpu_info.gpu_name, gpu_info.gpu_cores, gpu_info.gpu_freq });
-        try bw.flush();
+        try sys_info_list.append(try allocator.dupe(u8, try gpu_info.toStr(&buf)));
         allocator.free(gpu_info.gpu_name);
     } else if (builtin.os.tag == .linux) {
-        try stdout.print("Gpu: WIP\n", .{});
-        try bw.flush();
+        try sys_info_list.append(try allocator.dupe(u8, try std.fmt.bufPrint(&buf, "Gpu: WIP", .{})));
     }
 
     var ram_info = detection.hardware.RamInfo{
@@ -81,32 +73,31 @@ pub fn main() !void {
     } else if (builtin.os.tag == .linux) {
         ram_info = try detection.hardware.getRamInfo(allocator);
     }
-    try stdout.print("Ram: {d:.2} / {d:.2} GiB ({}%)\n", .{ ram_info.ram_usage, ram_info.ram_size, ram_info.ram_usage_percentage });
-    try bw.flush();
+    try sys_info_list.append(try allocator.dupe(u8, try ram_info.toStr(&buf)));
 
     const swap_info = if (builtin.os.tag == .macos) try detection.hardware.getSwapInfo() else if (builtin.os.tag == .linux) try detection.hardware.getSwapInfo(allocator);
     if (swap_info) |s| {
-        try stdout.print("Swap: {d:.2} / {d:.2} GiB ({}%)\n", .{ s.swap_usage, s.swap_size, s.swap_usage_percentage });
+        try sys_info_list.append(try allocator.dupe(u8, try s.toStr(&buf)));
     } else {
-        try stdout.print("Swap: Disabled\n", .{});
+        try sys_info_list.append(try allocator.dupe(u8, try std.fmt.bufPrint(&buf, "Swap: Disabled", .{})));
     }
-    try bw.flush();
 
-    const diskInfo = try detection.hardware.getDiskSize("/");
-    try stdout.print("Disk ({s}): {d:.2} / {d:.2} GB ({}%)\n", .{ diskInfo.disk_path, diskInfo.disk_usage, diskInfo.disk_size, diskInfo.disk_usage_percentage });
-    try bw.flush();
+    const disk_info = try detection.hardware.getDiskSize("/");
+    try sys_info_list.append(try allocator.dupe(u8, try disk_info.toStr(&buf)));
 
     const terminal_name = try detection.user.getTerminalName(allocator);
-    try stdout.print("Terminal: {s}\n", .{terminal_name});
-    try bw.flush();
+    try sys_info_list.append(try allocator.dupe(u8, try std.fmt.bufPrint(&buf, "Terminal: {s}", .{terminal_name})));
     allocator.free(terminal_name);
 
     const net_info_list = try detection.network.getNetInfo(allocator);
     for (net_info_list.items) |n| {
-        try stdout.print("Local IP ({s}): {s}\n", .{ n.interface_name, n.ipv4_addr });
-        try bw.flush();
+        try sys_info_list.append(try allocator.dupe(u8, try n.toStr(&buf)));
         allocator.free(n.interface_name);
         allocator.free(n.ipv4_addr);
     }
     net_info_list.deinit();
+
+    @memset(&buf, 0);
+
+    try ascii.printAscii(allocator, sys_info_list);
 }
