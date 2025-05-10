@@ -10,7 +10,7 @@ pub const NetInfo = struct {
     ipv4_addr: []u8,
 
     pub fn toStr(self: NetInfo, buf: []u8) ![]u8 {
-        return std.fmt.bufPrint(buf, "Local IP ({s}): {s}", .{ self.interface_name, self.ipv4_addr });
+        return std.fmt.bufPrint(buf, "({s}): {s}", .{ self.interface_name, self.ipv4_addr });
     }
 };
 
