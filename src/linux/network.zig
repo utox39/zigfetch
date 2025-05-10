@@ -5,6 +5,7 @@ const c_net_if = @cImport(@cInclude("net/if.h"));
 const c_netinet_in = @cImport(@cInclude("netinet/in.h"));
 const c_socket = @cImport(@cInclude("sys/socket.h"));
 
+/// Struct representing Network informations (interface name - ipv4 address)
 pub const NetInfo = struct {
     interface_name: []u8,
     ipv4_addr: []u8,

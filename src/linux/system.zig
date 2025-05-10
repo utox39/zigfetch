@@ -2,7 +2,7 @@ const std = @import("std");
 const c_sysinfo = @cImport(@cInclude("sys/sysinfo.h"));
 const c_utsname = @cImport(@cInclude("sys/utsname.h"));
 
-/// Structure representing system uptime in days, hours, and minutes.
+/// Struct representing system uptime in days, hours, and minutes.
 pub const SystemUptime = struct {
     days: i8,
     hours: i8,
@@ -13,6 +13,7 @@ pub const SystemUptime = struct {
     }
 };
 
+/// Struct representing Kernel informations
 pub const KernelInfo = struct {
     kernel_name: []u8,
     kernel_release: []u8,
