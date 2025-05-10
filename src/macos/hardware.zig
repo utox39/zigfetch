@@ -6,6 +6,7 @@ const c_cf = @cImport(@cInclude("CoreFoundation/CoreFoundation.h"));
 const c_mach = @cImport(@cInclude("mach/mach.h"));
 const c_statvfs = @cImport(@cInclude("sys/statvfs.h"));
 
+/// Struct representing CPU informations
 pub const CpuInfo = struct {
     cpu_name: []u8,
     cpu_cores: i32,
@@ -16,6 +17,7 @@ pub const CpuInfo = struct {
     }
 };
 
+/// Struct representing GPU informations
 pub const GpuInfo = struct {
     gpu_name: []u8,
     gpu_cores: i32,
@@ -26,6 +28,7 @@ pub const GpuInfo = struct {
     }
 };
 
+/// Struct representing RAM usage informations
 pub const RamInfo = struct {
     ram_size: f64,
     ram_usage: f64,
@@ -36,6 +39,7 @@ pub const RamInfo = struct {
     }
 };
 
+/// Struct representing Swap usage informations
 pub const SwapInfo = struct {
     swap_size: f64,
     swap_usage: f64,
@@ -46,6 +50,7 @@ pub const SwapInfo = struct {
     }
 };
 
+/// Struct representing Disk usage informations
 pub const DiskInfo = struct {
     disk_path: []const u8,
     disk_size: f64,

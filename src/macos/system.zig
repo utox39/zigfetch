@@ -2,7 +2,7 @@ const std = @import("std");
 const c_sysctl = @cImport(@cInclude("sys/sysctl.h"));
 const c_libproc = @cImport(@cInclude("libproc.h"));
 
-/// Structure representing system uptime in days, hours, and minutes.
+/// Struct representing system uptime in days, hours, and minutes.
 pub const SystemUptime = struct {
     days: i8,
     hours: i8,
@@ -13,6 +13,7 @@ pub const SystemUptime = struct {
     }
 };
 
+/// Struct representing Kernel informations
 pub const KernelInfo = struct {
     kernel_name: []u8,
     kernel_release: []u8,
@@ -22,7 +23,7 @@ pub const KernelInfo = struct {
     }
 };
 
-// Returns the hostname.
+/// Returns the hostname.
 pub fn getHostname(allocator: std.mem.Allocator) ![]u8 {
     var buf: [std.posix.HOST_NAME_MAX]u8 = undefined;
     const hostnameEnv = try std.posix.gethostname(&buf);
