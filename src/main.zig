@@ -106,6 +106,7 @@ pub fn main() !void {
     net_info_list.deinit();
 
     @memset(&buf1, 0);
+    @memset(&buf2, 0);
 
     try ascii.printAscii(allocator, sys_info_list);
 }
