@@ -11,6 +11,12 @@ pub fn main() !void {
     var sys_info_list = std.ArrayList([]u8).init(allocator);
     defer sys_info_list.deinit();
 
+    errdefer {
+        for (sys_info_list.items) |info| {
+            allocator.free(info);
+        }
+    }
+
     var buf1: [1024]u8 = undefined;
     var buf2: [1024]u8 = undefined;
 
