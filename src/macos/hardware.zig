@@ -85,13 +85,39 @@ pub fn getCpuInfo(allocator: std.mem.Allocator) !CpuInfo {
         return error.FailedToGetPhysicalCpuInfo;
     }
 
-    // TODO: add cpu frequency for Intel
+    // Get cpu architecture
+    const arch: []u8 = try getCpuArch(allocator);
+    defer allocator.free(arch);
 
-    const cpu_freq_mhz = try getCpuFreqAppleSilicon();
+    var cpu_freq_mhz: f64 = 0.0;
+
+    if (std.mem.eql(u8, arch, "arm64")) {
+        cpu_freq_mhz = try getCpuFreqAppleSilicon();
+    } else if (std.mem.eql(u8, arch, "x86_64")) {
+        cpu_freq_mhz = getCpuFreqIntel();
+    }
 
     const cpu_freq_ghz = @floor(cpu_freq_mhz) / 1000;
 
     return CpuInfo{ .cpu_name = cpu_name, .cpu_cores = n_cpu, .cpu_max_freq = cpu_freq_ghz };
+}
+
+fn getCpuArch(allocator: std.mem.Allocator) ![]u8 {
+    var size: usize = 0;
+
+    if (c_sysctl.sysctlbyname("hw.machine", null, &size, null, 0) != 0) {
+        return error.SysctlbynameFailed;
+    }
+
+    const machine: []u8 = try allocator.alloc(u8, size);
+
+    if (c_sysctl.sysctlbyname("hw.machine", machine.ptr, &size, null, 0) != 0) {
+        return error.SysctlbynameFailed;
+    }
+
+    defer allocator.free(machine);
+
+    return allocator.dupe(u8, std.mem.sliceTo(machine, 0));
 }
 
 fn getCpuFreqAppleSilicon() !f64 {
@@ -164,6 +190,19 @@ fn getCpuFreqAppleSilicon() !f64 {
     } else { // Assume that p_max is in kHz, M4 and later
         return @as(f64, @floatFromInt(p_max)) / 1_000;
     }
+}
+
+// TODO: test on intel machine
+pub fn getCpuFreqIntel() f64 {
+    var freq: f64 = 0;
+    var size: usize = @sizeOf(f64);
+
+    if (c_sysctl.sysctlbyname("hw.cpufrequency_max", &freq, &size, null, 0) != 0) {
+        return 0.0;
+    }
+
+    // Converts from Hz to MHz
+    return freq / 1_000_000.0;
 }
 
 pub fn getGpuInfo(allocator: std.mem.Allocator) !GpuInfo {
@@ -243,7 +282,16 @@ pub fn getGpuInfo(allocator: std.mem.Allocator) !GpuInfo {
         }
     }
 
-    const gpu_freq_mhz = try getAppleSiliconGpuFreq();
+    // Get cpu architecture
+    const arch: []u8 = try getCpuArch(allocator);
+    defer allocator.free(arch);
+
+    var gpu_freq_mhz: f64 = 0.0;
+
+    if (std.mem.eql(u8, arch, "arm64")) {
+        gpu_freq_mhz = try getAppleSiliconGpuFreq();
+    }
+
     const gpu_freq_ghz = @floor(gpu_freq_mhz) / 1000;
     gpu_info.gpu_freq = gpu_freq_ghz;
 
