@@ -282,7 +282,16 @@ pub fn getGpuInfo(allocator: std.mem.Allocator) !GpuInfo {
         }
     }
 
-    const gpu_freq_mhz = try getAppleSiliconGpuFreq();
+    // Get cpu architecture
+    const arch: []u8 = try getCpuArch(allocator);
+    defer allocator.free(arch);
+
+    var gpu_freq_mhz: f64 = 0.0;
+
+    if (std.mem.eql(u8, arch, "arm64")) {
+        gpu_freq_mhz = try getAppleSiliconGpuFreq();
+    }
+
     const gpu_freq_ghz = @floor(gpu_freq_mhz) / 1000;
     gpu_info.gpu_freq = gpu_freq_ghz;
 
