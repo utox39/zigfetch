@@ -26,15 +26,14 @@ pub fn getNetInfo(gpa: std.mem.Allocator) !std.array_list.Managed(NetInfo) {
 
             if (sockaddr_ptr.sa_family != c.AF_INET) continue;
 
-            var addr_in = @as(*const c.sockaddr_in, @ptrCast(@alignCast(sockaddr_ptr)));
-            var ip_buf: [c.INET_ADDRSTRLEN]u8 = undefined;
-            const ip_str = c.inet_ntop(c.AF_INET, &addr_in.sin_addr, &ip_buf, c.INET_ADDRSTRLEN);
-            if (ip_str) |ip| {
-                try net_info_list.append(NetInfo{
-                    .interface_name = try gpa.dupe(u8, std.mem.span(ifa.ifa_name)),
-                    .ipv4_addr = try gpa.dupe(u8, std.mem.span(ip)),
-                });
-            }
+            const addr_in = @as(*const c.sockaddr_in, @ptrCast(@alignCast(sockaddr_ptr)));
+            const bytes = std.mem.asBytes(&addr_in.sin_addr.s_addr);
+            const ipv4_addr = try std.fmt.allocPrint(gpa, "{d}.{d}.{d}.{d}", .{ bytes[0], bytes[1], bytes[2], bytes[3] });
+
+            try net_info_list.append(NetInfo{
+                .interface_name = try gpa.dupe(u8, std.mem.span(ifa.ifa_name)),
+                .ipv4_addr = ipv4_addr,
+            });
         }
     }
 
