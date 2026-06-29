@@ -8,7 +8,7 @@ pub fn getUsername(gpa: std.mem.Allocator, environ: std.process.Environ) ![]u8 {
 }
 
 pub fn getShell(gpa: std.mem.Allocator, io: std.Io, environ: std.process.Environ) ![]u8 {
-    const shell = std.process.Environ.getAlloc(environ, gpa, "SHELL") catch |err| if (err == error.EnvironmentVariableNotFound) {
+    const shell = std.process.Environ.getAlloc(environ, gpa, "SHELL") catch |err| if (err == error.EnvironmentVariableMissing) {
         return gpa.dupe(u8, "Unknown");
     } else return err;
 
@@ -38,7 +38,7 @@ fn parseBashVersion(shell_version_output: []u8) ?[]u8 {
 }
 
 pub fn getTerminalName(gpa: std.mem.Allocator, environ: std.process.Environ) ![]u8 {
-    const term_program = std.process.Environ.getAlloc(environ, gpa, "TERM_PROGRAM") catch |err| if (err == error.EnvironmentVariableNotFound) {
+    const term_program = std.process.Environ.getAlloc(environ, gpa, "TERM_PROGRAM") catch |err| if (err == error.EnvironmentVariableMissing) {
         return gpa.dupe(u8, "Unknown");
     } else return err;
     return term_program;
