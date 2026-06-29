@@ -26,7 +26,7 @@ pub fn getHostname(gpa: std.mem.Allocator) ![]u8 {
 }
 
 pub fn getLocale(gpa: std.mem.Allocator, environ: std.process.Environ) ![]u8 {
-    const locale = std.process.Environ.getAlloc(environ, gpa, "LANG") catch |err| if (err == error.EnvironmentVariableNotFound) {
+    const locale = std.process.Environ.getAlloc(environ, gpa, "LANG") catch |err| if (err == error.EnvironmentVariableMissing) {
         return gpa.dupe(u8, "Unknown");
     } else return err;
     return locale;
