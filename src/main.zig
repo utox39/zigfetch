@@ -4,6 +4,7 @@ const detection = @import("detection.zig").os_module;
 const display = @import("display.zig");
 const config = @import("config.zig");
 const formatters = @import("formatters.zig");
+const utils = @import("utils.zig");
 
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
@@ -79,7 +80,15 @@ pub fn main(init: std.process.Init) !void {
     }
 
     // If both the `images` and `ascii_abs_path` fields are specified, the images are prioritized
-    if (config.getImages(conf)) |images| {
+    const config_images = config.getImages(conf);
+    if (!utils.supportsKittyProtocol(io) or (config_images == null)) {
+        try display.printAsciiAndModules(
+            allocator,
+            io,
+            config.getAsciiPath(conf),
+            modules_list,
+        );
+    } else if (config_images) |images| {
         if (images.len != 0) {
             try display.printImageAndModules(
                 allocator,
@@ -90,12 +99,5 @@ pub fn main(init: std.process.Init) !void {
         } else {
             return error.NoImagesInTheArray;
         }
-    } else {
-        try display.printAsciiAndModules(
-            allocator,
-            io,
-            config.getAsciiPath(conf),
-            modules_list,
-        );
     }
 }
