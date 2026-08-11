@@ -85,7 +85,7 @@ pub fn main(init: std.process.Init) !void {
         try display.printAsciiAndModules(
             allocator,
             io,
-            config.getAsciiPath(conf),
+            config.getAsciiPaths(conf),
             modules_list,
         );
     } else if (config_images) |images| {
