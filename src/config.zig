@@ -14,8 +14,32 @@ pub const Image = struct {
     width: ?u8 = null,
 };
 
+/// Accepts either a single string or an array of strings in the JSON config.
+pub const AsciiAbsPath = struct {
+    paths: [][]const u8,
+
+    pub fn jsonParse(allocator: std.mem.Allocator, source: anytype, options: std.json.ParseOptions) !AsciiAbsPath {
+        const value = try std.json.Value.jsonParse(allocator, source, options);
+        return jsonParseFromValue(allocator, value, options);
+    }
+
+    pub fn jsonParseFromValue(allocator: std.mem.Allocator, source: std.json.Value, options: std.json.ParseOptions) !AsciiAbsPath {
+        switch (source) {
+            .string => {
+                const paths = try allocator.alloc([]const u8, 1);
+                paths[0] = try std.json.parseFromValueLeaky([]const u8, allocator, source, options);
+                return .{ .paths = paths };
+            },
+            .array => {
+                return .{ .paths = try std.json.parseFromValueLeaky([][]const u8, allocator, source, options) };
+            },
+            else => return error.UnexpectedToken,
+        }
+    }
+};
+
 pub const Config = struct {
-    ascii_abs_path: ?[]u8 = null,
+    ascii_abs_path: ?AsciiAbsPath = null,
     images: ?[]Image = null,
     username_hostname_color: ?[]u8 = null,
     modules: []Module,
@@ -39,9 +63,9 @@ pub const ModuleType = enum {
     custom,
 };
 
-pub fn getAsciiPath(config: ?std.json.Parsed(Config)) ?[]u8 {
+pub fn getAsciiPaths(config: ?std.json.Parsed(Config)) ?[][]const u8 {
     if (config) |c| {
-        return c.value.ascii_abs_path;
+        return if (c.value.ascii_abs_path) |a| a.paths else null;
     } else return null;
 }
 
