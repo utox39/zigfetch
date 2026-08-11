@@ -99,14 +99,8 @@ pub fn getModulesTypes(gpa: std.mem.Allocator, config: ?std.json.Parsed(Config))
     return modules_list;
 }
 
-pub fn readConfigFile(gpa: std.mem.Allocator, io: std.Io, environ: std.process.Environ) !?std.json.Parsed(Config) {
-    const home = try std.process.Environ.getAlloc(environ, gpa, "HOME");
-    defer gpa.free(home);
-
-    const config_abs_path = try std.mem.concat(gpa, u8, &.{ home, "/.config/zigfetch/config.json" });
-    defer gpa.free(config_abs_path);
-
-    const config_file = std.Io.Dir.openFileAbsolute(io, config_abs_path, .{ .mode = .read_only }) catch |err| switch (err) {
+pub fn readConfigFile(gpa: std.mem.Allocator, io: std.Io, path: []const u8) !?std.json.Parsed(Config) {
+    const config_file = std.Io.Dir.openFileAbsolute(io, path, .{ .mode = .read_only }) catch |err| switch (err) {
         error.FileNotFound => return null,
         else => return err,
     };
