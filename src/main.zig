@@ -12,6 +12,12 @@ pub fn main(init: std.process.Init) !void {
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 
+    const home = try std.process.Environ.getAlloc(init.minimal.environ, allocator, "HOME");
+    defer allocator.free(home);
+
+    const config_abs_path = try std.mem.concat(allocator, u8, &.{ home, "/.config/zigfetch/config.json" });
+    defer allocator.free(config_abs_path);
+
     var modules_list = std.array_list.Managed([]u8).init(allocator);
     defer modules_list.deinit();
 
@@ -21,7 +27,7 @@ pub fn main(init: std.process.Init) !void {
         }
     }
 
-    const conf = try config.readConfigFile(allocator, io, init.minimal.environ);
+    const conf = try config.readConfigFile(allocator, io, config_abs_path);
     defer if (conf) |c| c.deinit();
 
     const modules_types = try config.getModulesTypes(allocator, conf);
@@ -85,7 +91,7 @@ pub fn main(init: std.process.Init) !void {
         try display.printAsciiAndModules(
             allocator,
             io,
-            config.getAsciiPath(conf),
+            config.getAsciiPaths(conf),
             modules_list,
         );
     } else if (config_images) |images| {
