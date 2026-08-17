@@ -57,7 +57,7 @@ $ zig build -Doptimize=ReleaseSafe
 $ mv ./zig-out/zigfetch ~/bin/
 ```
 
-### Via [Homebrew](https://brew.sh/)
+### Via [Homebrew](https://brew.sh/) tap
 
 ```bash
 brew install utox39/tap/zigfetch
@@ -170,6 +170,17 @@ To use an ASCII art of your choice:
 ```json
 "ascii_abs_path": "absolute_path/to/your/ascii_art.txt"
 ```
+
+You can use multiple ASCII arts:
+
+```json
+"ascii_abs_path": [
+  "absolute_path/to/your/ascii_art.txt",
+  "absolute_path/to/your/ascii_art2.txt"
+]
+```
+
+If multiple ASCII arts are specified, one will be selected pseudo-randomly.
 
 Don't use the `~` character.
 
