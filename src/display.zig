@@ -203,14 +203,25 @@ pub fn printImageAndModules(gpa: std.mem.Allocator, io: std.Io, sys_info_list: s
     }
 }
 
-pub fn printAsciiAndModules(gpa: std.mem.Allocator, io: std.Io, ascii_art_path: ?[]u8, sys_info_list: std.array_list.Managed([]u8)) !void {
+pub fn printAsciiAndModules(gpa: std.mem.Allocator, io: std.Io, ascii_art_paths: ?[][]const u8, sys_info_list: std.array_list.Managed([]u8)) !void {
     var stdout_buffer: [2048]u8 = undefined;
     var stdout_file_writer: std.Io.File.Writer = .init(.stdout(), io, &stdout_buffer);
     const stdout = &stdout_file_writer.interface;
 
     var ascii_art_data: []const u8 = undefined;
-    if (ascii_art_path) |ascii| {
-        const ascii_file = try std.Io.Dir.cwd().openFile(io, ascii, .{ .mode = .read_only });
+    if (ascii_art_paths) |ascii_paths| {
+        var ascii_art_path: []const u8 = undefined;
+        if (ascii_paths.len > 1) {
+            // Choose a random Ascii art
+            var seed: u64 = undefined;
+            io.random(std.mem.asBytes(&seed));
+            var prng = std.Random.DefaultPrng.init(seed);
+            ascii_art_path = ascii_paths[prng.random().uintLessThan(usize, ascii_paths.len)];
+        } else {
+            ascii_art_path = ascii_paths[0];
+        }
+
+        const ascii_file = try std.Io.Dir.cwd().openFile(io, ascii_art_path, .{ .mode = .read_only });
         defer ascii_file.close(io);
         const file_size = (try ascii_file.stat(io)).size;
         ascii_art_data = try utils.readFile(gpa, io, ascii_file, file_size);
@@ -218,7 +229,7 @@ pub fn printAsciiAndModules(gpa: std.mem.Allocator, io: std.Io, ascii_art_path: 
         ascii_art_data = @embedFile("./assets/ascii/guy_fawks.txt");
     }
 
-    defer if (ascii_art_path != null) {
+    defer if (ascii_art_paths != null) {
         gpa.free(ascii_art_data);
     };
 
