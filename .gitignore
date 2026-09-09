@@ -4,3 +4,5 @@ result
 mise.local.toml
 mise.*.local.toml
 .miserc.toml
+perf.data
+perf.data.old
