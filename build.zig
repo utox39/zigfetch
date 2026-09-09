@@ -14,6 +14,19 @@ pub fn build(b: *std.Build) void {
     const is_macos = builtin.os.tag == .macos;
     const is_linux = builtin.os.tag == .linux;
 
+    // If the user compiles zigfetch with `-Denable-rpm`:
+    // 1. translate_c defines the C macro "ENABLE_RPM"
+    // 2. In src/linux/c.h:
+    //  2.1. If ENABLE_RPM is defined, librpm and sqlite3 are included
+    const rpm = b.option(
+        bool,
+        "enable-rpm",
+        "Enable RPM packages detection.",
+    ) orelse false;
+
+    const options = b.addOptions();
+    options.addOption(bool, "enable_rpm", rpm);
+
     // Standard optimization options allow the person running `zig build` to select
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall. Here we do not
     // set a preferred release mode, allowing the user to decide how to optimize.
@@ -34,6 +47,11 @@ pub fn build(b: *std.Build) void {
     });
 
     if (is_linux) {
+        if (rpm) {
+            translate_c.defineCMacro("ENABLE_RPM", null);
+            translate_c.linkSystemLibrary("rpm", .{ .needed = true });
+            translate_c.linkSystemLibrary("sqlite3", .{ .needed = true });
+        }
         translate_c.linkSystemLibrary("pci", .{ .needed = true });
         translate_c.link_libc = true;
     }
@@ -49,6 +67,8 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
+
+    exe.root_module.addOptions("build_options", options);
 
     if (is_macos) {
         exe.root_module.linkFramework("CoreFoundation", .{ .needed = true });
