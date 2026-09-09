@@ -20,6 +20,7 @@
   - [Configuration](#configuration)
 - [Roadtrip](#roadtrip)
 - [Contributing](#contributing)
+- [License](#license)
 
 ## Description
 
@@ -36,6 +37,13 @@ Zigfetch is a minimal [neofetch](https://github.com/dylanaraps/neofetch)/[fastfe
 
 - [libpci](https://github.com/pciutils/pciutils)
 
+#### RPM based distros only
+
+To get RPM support, zigfetch needs:
+
+- [librpm](https://rpm.org/docs/4.20.x/api/) (rpm-devel)
+- [sqlite3](https://sqlite.org/index.html) (sqlite-devel)
+
 ## Installation
 
 ### Build from source
@@ -45,22 +53,32 @@ Zigfetch is a minimal [neofetch](https://github.com/dylanaraps/neofetch)/[fastfe
 
 ```bash
 # Clone the repo
-$ git clone https://github.com/utox39/zigfetch.git
+git clone https://github.com/utox39/zigfetch.git
 
 # cd to the path
-$ cd path/to/zigfetch
+cd path/to/zigfetch
 
 # Build zigfetch
-$ zig build -Doptimize=ReleaseSafe
+zig build -Doptimize=ReleaseSafe
+
+# NOTE: for RPM based distros:
+zig build -Doptimize=ReleaseSafe -Denable-rpm
 
 # Then move it somewhere in your $PATH. Here is an example:
-$ mv ./zig-out/zigfetch ~/bin/
+mv ./zig-out/bin/zigfetch ~/bin/
 ```
 
 ### Via [Homebrew](https://brew.sh/) tap
 
 ```bash
 brew install utox39/tap/zigfetch
+```
+
+> [!NOTE]
+> To enable RPM support:
+
+```bash
+ZIGFETCH_ENABLE_RPM=1 brew install utox39/tap/zigfetch
 ```
 
 ### Other package managers
@@ -137,7 +155,7 @@ Available modules:
 |  terminal   |       Yes       |           Yes            |   WIP   |
 |   locale    |       Yes       |           Yes            |   WIP   |
 
-\*(flatpak, nix, dpkg, pacman, xbps)
+\*(flatpak, nix, dpkg, pacman, xbps, rpm)
 
 ```json
   "modules": [
@@ -224,11 +242,13 @@ To change the Username and Hostname color (HEX colors only):
 ## Roadtrip
 
 - [ ] Add ASCII art for each operating system and Linux distro
-- [x] Add GPU info for Linux
-- [x] Add packages info for Linux
-- [x] Add user customization
+- [ ] Add more packages info for Linux
 - [ ] Add support for Windows
 
 ## Contributing
 
 Please see [CONTIBUTING](https://github.com/utox39/zigfetch/blob/main/CONTRIBUTING.md). Thanks!
+
+## License
+
+MIT License. See: [LICENSE](https://github.com/utox39/zigfetch/blob/main/LICENSE)
