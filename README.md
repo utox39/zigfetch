@@ -18,7 +18,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
   - [Configuration](#configuration)
-- [Roadtrip](#roadtrip)
+- [Roadmap](#roadtrip)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -239,7 +239,7 @@ To change the Username and Hostname color (HEX colors only):
 "username_hostname_color": "#5E81AC"
 ```
 
-## Roadtrip
+## Roadmap
 
 - [ ] Add ASCII art for each operating system and Linux distro
 - [ ] Add more packages info for Linux
