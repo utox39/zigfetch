@@ -11,8 +11,8 @@ pub fn build(b: *std.Build) void {
     // for restricting supported target set are available.
     const target = b.standardTargetOptions(.{});
 
-    const is_macos = builtin.os.tag == .macos;
-    const is_linux = builtin.os.tag == .linux;
+    const is_macos = builtin.target.os.tag == .macos;
+    const is_linux = builtin.target.os.tag == .linux;
 
     // If the user compiles zigfetch with `-Denable-rpm`:
     // 1. translate_c defines the C macro "ENABLE_RPM"
