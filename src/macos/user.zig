@@ -20,7 +20,7 @@ pub fn getShell(gpa: std.mem.Allocator, io: std.Io, environ: std.process.Environ
     if (std.mem.indexOf(u8, shell, "bash") != null) {
         const bash_version = parseBashVersion(result_stdout);
         defer gpa.free(result_stdout);
-        return try std.fmt.allocPrint(gpa, "{s} {s}", .{ "bash", bash_version.? });
+        return try std.mem.Allocator.print(gpa, "{s} {s}", .{ "bash", bash_version.? });
     }
 
     return result_stdout;

@@ -50,7 +50,7 @@ pub const default_formatters = [_]*const fn (fmt_ctx: FormatterContext) anyerror
 };
 
 pub fn getFormattedUsernameHostname(gpa: std.mem.Allocator, color: []const u8, username: []const u8, hostname: []const u8) ![]u8 {
-    return try std.fmt.allocPrint(gpa, "{s}{s}{s}@{s}{s}{s}", .{
+    return try std.mem.Allocator.print(gpa, "{s}{s}{s}@{s}{s}{s}", .{
         color,
         username,
         display.Reset,
@@ -71,7 +71,7 @@ pub fn getFormattedKernelInfo(fmt_ctx: FormatterContext, key: []const u8, key_co
     defer allocator.free(kernel_info.kernel_name);
     defer allocator.free(kernel_info.kernel_release);
 
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s} {s}", .{
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s} {s}", .{
         key_color,
         key,
         display.Reset,
@@ -90,7 +90,7 @@ pub fn getFormattedOsInfo(fmt_ctx: FormatterContext, key: []const u8, key_color:
 
     const os_info = if (builtin.os.tag == .macos) try detection.system.getOsInfo(allocator) else if (builtin.os.tag == .linux) try detection.system.getOsInfo(allocator, io);
     defer allocator.free(os_info);
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s}", .{
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s}", .{
         key_color,
         key,
         display.Reset,
@@ -108,7 +108,7 @@ pub fn getFormattedLocaleInfo(fmt_ctx: FormatterContext, key: []const u8, key_co
 
     const locale = try detection.system.getLocale(allocator, environ);
     defer allocator.free(locale);
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s}", .{
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s}", .{
         key_color,
         key,
         display.Reset,
@@ -125,7 +125,7 @@ pub fn getFormattedUptimeInfo(fmt_ctx: FormatterContext, key: []const u8, key_co
     const io = fmt_ctx.io;
 
     const uptime = detection.system.getSystemUptime(io);
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {} days, {} hours, {} minutes", .{
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {} days, {} hours, {} minutes", .{
         key_color,
         key,
         display.Reset,
@@ -146,7 +146,7 @@ pub fn getFormattedPackagesInfo(fmt_ctx: FormatterContext, key: []const u8, key_
 
     const packages_info = if (builtin.os.tag == .macos) try detection.packages.getPackagesInfo(allocator, io) else if (builtin.os.tag == .linux) try detection.packages.getPackagesInfo(allocator, io, environ);
     defer allocator.free(packages_info);
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s}{s}", .{
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s}{s}", .{
         key_color,
         key,
         display.Reset,
@@ -165,7 +165,7 @@ pub fn getFormattedShellInfo(fmt_ctx: FormatterContext, key: []const u8, key_col
 
     const shell = try detection.user.getShell(allocator, io, environ);
     defer allocator.free(shell);
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s}", .{
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s}", .{
         key_color,
         key,
         display.Reset,
@@ -183,7 +183,7 @@ pub fn getFormattedCpuInfo(fmt_ctx: FormatterContext, key: []const u8, key_color
 
     const cpu_info = if (builtin.os.tag == .macos) try detection.hardware.getCpuInfo(allocator) else if (builtin.os.tag == .linux) try detection.hardware.getCpuInfo(allocator, io);
     defer allocator.free(cpu_info.cpu_name);
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s} ({}) @ {d:.2} GHz", .{
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s} ({}) @ {d:.2} GHz", .{
         key_color,
         key,
         display.Reset,
@@ -203,7 +203,7 @@ pub fn getFormattedGpuInfo(fmt_ctx: FormatterContext, key: []const u8, key_color
     if (builtin.os.tag == .macos) {
         const gpu_info = try detection.hardware.getGpuInfo(allocator);
         defer allocator.free(gpu_info.gpu_name);
-        return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s} ({}) @ {d:.2} GHz", .{
+        return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s} ({}) @ {d:.2} GHz", .{
             key_color,
             key,
             display.Reset,
@@ -219,14 +219,14 @@ pub fn getFormattedGpuInfo(fmt_ctx: FormatterContext, key: []const u8, key_color
         for (gpu_info_list.items) |g| {
             var formatted_gpu_info: []u8 = undefined;
             if ((g.gpu_cores == 0) or (g.gpu_freq == 0.0)) {
-                formatted_gpu_info = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s}", .{
+                formatted_gpu_info = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s}", .{
                     key_color,
                     key,
                     display.Reset,
                     g.gpu_name,
                 });
             } else {
-                formatted_gpu_info = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s} ({}) @ {d:.2} GHz", .{
+                formatted_gpu_info = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s} ({}) @ {d:.2} GHz", .{
                     key_color,
                     key,
                     display.Reset,
@@ -253,7 +253,7 @@ pub fn getFormattedRamInfo(fmt_ctx: FormatterContext, key: []const u8, key_color
     const io = fmt_ctx.io;
 
     const ram_info = if (builtin.os.tag == .macos) try detection.hardware.getRamInfo() else if (builtin.os.tag == .linux) try detection.hardware.getRamInfo(allocator, io);
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {d:.2} / {d:.2} GiB ({}%)", .{
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {d:.2} / {d:.2} GiB ({}%)", .{
         key_color,
         key,
         display.Reset,
@@ -273,7 +273,7 @@ pub fn getFormattedSwapInfo(fmt_ctx: FormatterContext, key: []const u8, key_colo
 
     const swap_info = if (builtin.os.tag == .macos) try detection.hardware.getSwapInfo() else if (builtin.os.tag == .linux) try detection.hardware.getSwapInfo(allocator, io);
     if (swap_info) |s| {
-        return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {d:.2} / {d:.2} GiB ({}%)", .{
+        return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {d:.2} / {d:.2} GiB ({}%)", .{
             key_color,
             key,
             display.Reset,
@@ -282,7 +282,7 @@ pub fn getFormattedSwapInfo(fmt_ctx: FormatterContext, key: []const u8, key_colo
             s.swap_usage_percentage,
         }) };
     } else {
-        return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} Disabled", .{ key_color, key, display.Reset }) };
+        return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} Disabled", .{ key_color, key, display.Reset }) };
     }
 }
 
@@ -294,7 +294,7 @@ pub fn getFormattedDiskInfo(fmt_ctx: FormatterContext, key: []const u8, key_colo
     const allocator = fmt_ctx.gpa;
 
     const disk_info = try detection.hardware.getDiskSize("/");
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s} ({s}):{s} {d:.2} / {d:.2} GB ({}%)", .{
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s} ({s}):{s} {d:.2} / {d:.2} GB ({}%)", .{
         key_color,
         key,
         disk_info.disk_path,
@@ -315,7 +315,7 @@ pub fn getFormattedWindowManagerInfo(fmt_ctx: FormatterContext, key: []const u8,
 
     const wm = if (builtin.os.tag == .macos) try detection.system.getWindowManagerInfo(allocator) else if (builtin.os.tag == .linux) try detection.system.getWindowManagerInfo(allocator, io);
     defer allocator.free(wm);
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s}", .{ key_color, key, display.Reset, wm }) };
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s}", .{ key_color, key, display.Reset, wm }) };
 }
 
 pub fn getDefaultFormattedTerminalNameInfo(fmt_ctx: FormatterContext) !Result {
@@ -328,7 +328,7 @@ pub fn getFormattedTerminalNameInfo(fmt_ctx: FormatterContext, key: []const u8, 
 
     const terminal_name = try detection.user.getTerminalName(allocator, environ);
     defer allocator.free(terminal_name);
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}:{s} {s}", .{ key_color, key, display.Reset, terminal_name }) };
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s}", .{ key_color, key, display.Reset, terminal_name }) };
 }
 
 pub fn getDefaultFormattedNetInfo(fmt_ctx: FormatterContext) !Result {
@@ -342,7 +342,7 @@ pub fn getFormattedNetInfo(fmt_ctx: FormatterContext, key: []const u8, key_color
 
     var net_info_list = try detection.network.getNetInfo(allocator);
     for (net_info_list.items) |n| {
-        try formatted_net_info_list.append(try std.fmt.allocPrint(allocator, "{s}{s} ({s}):{s} {s}", .{
+        try formatted_net_info_list.append(try std.mem.Allocator.print(allocator, "{s}{s} ({s}):{s} {s}", .{
             key_color,
             key,
             n.interface_name,
@@ -360,5 +360,5 @@ pub fn getFormattedNetInfo(fmt_ctx: FormatterContext, key: []const u8, key_color
 pub fn getFormattedCustom(fmt_ctx: FormatterContext, key: []const u8, key_color: []const u8) !Result {
     const allocator = fmt_ctx.gpa;
 
-    return Result{ .string = try std.fmt.allocPrint(allocator, "{s}{s}{s}", .{ key_color, key, display.Reset }) };
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}{s}", .{ key_color, key, display.Reset }) };
 }

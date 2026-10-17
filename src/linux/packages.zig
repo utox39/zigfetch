@@ -114,7 +114,7 @@ fn countNixPackages(gpa: std.mem.Allocator, io: std.Io, environ: std.process.Env
 
     var hash: [32]u8 = undefined;
     std.crypto.hash.Blake3.hash(real_path, &hash, .{});
-    const hash_hex = try std.fmt.allocPrint(gpa, "{x}", .{hash});
+    const hash_hex = try std.mem.Allocator.print(gpa, "{x}", .{hash});
     defer gpa.free(hash_hex);
 
     var count: usize = 0;
@@ -180,7 +180,7 @@ fn writeNixCache(gpa: std.mem.Allocator, io: std.Io, environ: std.process.Enviro
     var cache_file = try nix_cache_dir.createFile(io, "nix_cache", .{ .truncate = true });
     defer cache_file.close(io);
 
-    const cache_content = try std.fmt.allocPrint(gpa, "{s}\n{d}\n", .{ hash, count });
+    const cache_content = try std.mem.Allocator.print(gpa, "{s}\n{d}\n", .{ hash, count });
     defer gpa.free(cache_content);
     try cache_file.writePositionalAll(io, cache_content, 0);
 }

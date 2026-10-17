@@ -28,7 +28,7 @@ pub fn getNetInfo(gpa: std.mem.Allocator) !std.array_list.Managed(NetInfo) {
 
             const addr_in = @as(*const c.sockaddr_in, @ptrCast(@alignCast(sockaddr_ptr)));
             const bytes = std.mem.asBytes(&addr_in.sin_addr.s_addr);
-            const ipv4_addr = try std.fmt.allocPrint(gpa, "{d}.{d}.{d}.{d}", .{ bytes[0], bytes[1], bytes[2], bytes[3] });
+            const ipv4_addr = try std.mem.Allocator.print(gpa, "{d}.{d}.{d}.{d}", .{ bytes[0], bytes[1], bytes[2], bytes[3] });
 
             try net_info_list.append(NetInfo{
                 .interface_name = try gpa.dupe(u8, std.mem.span(ifa.ifa_name)),
