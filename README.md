@@ -31,7 +31,7 @@ Zigfetch is a minimal [neofetch](https://github.com/dylanaraps/neofetch)/[fastfe
 
 ## Requirements
 
-- \>= [zig v0.16.0](https://ziglang.org/)
+- \>= [zig v0.17.0](https://ziglang.org/)
 
 ### Linux only
 
