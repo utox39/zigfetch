@@ -8,7 +8,7 @@ const utils = @import("utils.zig");
 
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
-    var gpa = std.heap.DebugAllocator(.{}){};
+    var gpa: std.heap.SafeAllocator = .init(init.gpa, .{});
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
 

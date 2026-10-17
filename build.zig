@@ -1,5 +1,6 @@
 const std = @import("std");
 const builtin = @import("builtin");
+const Translator = @import("translate_c").Translator;
 
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
@@ -11,8 +12,8 @@ pub fn build(b: *std.Build) void {
     // for restricting supported target set are available.
     const target = b.standardTargetOptions(.{});
 
-    const is_macos = builtin.os.tag == .macos;
-    const is_linux = builtin.os.tag == .linux;
+    const is_macos = builtin.target.os.tag == .macos;
+    const is_linux = builtin.target.os.tag == .linux;
 
     // If the user compiles zigfetch with `-Denable-rpm`:
     // 1. translate_c defines the C macro "ENABLE_RPM"
@@ -40,20 +41,26 @@ pub fn build(b: *std.Build) void {
         else
             @compileError("Unsupported operating system");
 
-    const translate_c = b.addTranslateC(.{
-        .root_source_file = b.path(c_dot_h_path),
-        .target = target,
-        .optimize = optimize,
-    });
+    const translate_c = b.dependency("translate_c", .{});
+
+    const translator: Translator = .init(
+        translate_c,
+        .{
+            .c_source_file = b.path(c_dot_h_path),
+            .target = target,
+            .optimize = optimize,
+            .link_libc = is_linux,
+            .warnings = .show,
+        },
+    );
 
     if (is_linux) {
         if (rpm) {
-            translate_c.defineCMacro("ENABLE_RPM", null);
-            translate_c.linkSystemLibrary("rpm", .{ .needed = true });
-            translate_c.linkSystemLibrary("sqlite3", .{ .needed = true });
+            translator.defineCMacro("ENABLE_RPM", null);
+            translator.mod.linkSystemLibrary("rpm", .{ .needed = true });
+            translator.mod.linkSystemLibrary("sqlite3", .{ .needed = true });
         }
-        translate_c.linkSystemLibrary("pci", .{ .needed = true });
-        translate_c.link_libc = true;
+        translator.mod.linkSystemLibrary("pci", .{ .needed = true });
     }
 
     const exe = b.addExecutable(.{
@@ -63,7 +70,7 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "c", .module = translate_c.createModule() },
+                .{ .name = "c", .module = translator.mod },
             },
         }),
     });
@@ -93,9 +100,10 @@ pub fn build(b: *std.Build) void {
 
     // This allows the user to pass arguments to the application in the build
     // command itself, like this: `zig build run -- arg1 arg2 etc`
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
+    run_cmd.addPassthruArgs();
+    // if (b.args) |args| {
+    //     run_cmd.addArgs(args);
+    // }
 
     // This creates a build step. It will be visible in the `zig build --help` menu,
     // and can be selected like this: `zig build run`

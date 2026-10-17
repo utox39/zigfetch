@@ -110,7 +110,7 @@ pub fn getOsInfo(gpa: std.mem.Allocator) ![]u8 {
         return error.FailedToGetOsVersion;
     }
 
-    const os_info = try std.fmt.allocPrint(gpa, "macOS {s}", .{os_version});
+    const os_info = try std.mem.Allocator.print(gpa, "macOS {s}", .{os_version});
 
     return os_info;
 }
