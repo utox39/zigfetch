@@ -161,8 +161,8 @@ pub fn supportsKittyProtocol(io: std.Io) bool {
     var raw_termios = original_termios;
     raw_termios.lflag.ICANON = false;
     raw_termios.lflag.ECHO = false;
-    raw_termios.cc[@intFromEnum(std.posix.V.MIN)] = 0;
-    raw_termios.cc[@intFromEnum(std.posix.V.TIME)] = 1; // 100 ms
+    raw_termios.cc[@backingInt(std.posix.V.MIN)] = 0;
+    raw_termios.cc[@backingInt(std.posix.V.TIME)] = 1; // 100 ms
 
     std.posix.tcsetattr(stdin.handle, .NOW, raw_termios) catch return false;
     defer std.posix.tcsetattr(stdin.handle, .NOW, original_termios) catch {};
