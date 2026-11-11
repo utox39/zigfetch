@@ -74,7 +74,7 @@ pub fn main(init: std.process.Init) !void {
             const rgb = try display.hexColorToRgb(module.key_color);
             const key_color = try std.fmt.bufPrint(&buf, "\x1b[38;2;{d};{d};{d}m", .{ rgb.r, rgb.g, rgb.b });
 
-            const result = try formatters.formatters[@intFromEnum(module_type)](fmt_ctx, module.key, key_color);
+            const result = try formatters.formatters[@backingInt(module_type)](fmt_ctx, module.key, key_color);
             switch (result) {
                 .string => |r| try modules_list.append(r),
                 .string_arraylist => |r| {
