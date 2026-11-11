@@ -94,6 +94,34 @@ pub fn getOsInfo(gpa: std.mem.Allocator, io: std.Io) ![]u8 {
     return try gpa.dupe(u8, pretty_name orelse "Unknown");
 }
 
+pub fn getDesktopEnvironmentInfo(gpa: std.mem.Allocator, environ: std.process.Environ) ![]const u8 {
+    const xdg_current_desktop: ?[]u8 = std.process.Environ.getAlloc(environ, gpa, "XDG_CURRENT_DESKTOP") catch |err| switch (err) {
+        error.EnvironmentVariableMissing => null,
+        else => return err,
+    };
+    defer if (xdg_current_desktop) |d| gpa.free(d);
+
+    const desktop_session: ?[]u8 = std.process.Environ.getAlloc(environ, gpa, "DESKTOP_SESSION") catch |err| switch (err) {
+        error.EnvironmentVariableMissing => null,
+        else => return err,
+    };
+    defer if (desktop_session) |s| gpa.free(s);
+
+    var session_name: []const u8 = "";
+    if (desktop_session) |s| {
+        session_name = std.fs.path.basename(s);
+        if (std.mem.endsWith(u8, session_name, ".desktop")) session_name = session_name[0 .. session_name.len - ".desktop".len];
+    }
+
+    const desktop: []const u8 = xdg_current_desktop orelse "";
+
+    if (desktop.len == 0 and session_name.len == 0) return try std.mem.Allocator.dupe(gpa, u8, "Unknown");
+    if (desktop.len == 0) return try gpa.dupe(u8, session_name);
+    if (session_name.len == 0 or std.ascii.eqlIgnoreCase(desktop, session_name)) return try gpa.dupe(u8, desktop);
+
+    return try std.mem.Allocator.print(gpa, "{s} ({s})", .{ desktop, session_name });
+}
+
 pub fn getWindowManagerInfo(gpa: std.mem.Allocator, io: std.Io) ![]const u8 {
     var dir = try std.Io.Dir.cwd().openDir(io, "/proc/", .{ .iterate = true });
     defer dir.close(io);

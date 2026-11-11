@@ -1,6 +1,6 @@
 const std = @import("std");
-const config = @import("./config.zig");
-const utils = @import("./utils.zig");
+const config = @import("config.zig");
+const utils = @import("utils.zig");
 
 pub const Reset = "\x1b[0m";
 pub const Bold = "\x1b[1m";

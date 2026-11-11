@@ -26,6 +26,7 @@ pub const formatters = [_]*const fn (fmt_ctx: FormatterContext, key: []const u8,
     &getFormattedSwapInfo,
     &getFormattedDiskInfo,
     &getFormattedNetInfo,
+    &getFormattedDesktopEnvironmentInfo,
     &getFormattedWindowManagerInfo,
     &getFormattedTerminalNameInfo,
     &getFormattedLocaleInfo,
@@ -44,6 +45,7 @@ pub const default_formatters = [_]*const fn (fmt_ctx: FormatterContext) anyerror
     &getDefaultFormattedSwapInfo,
     &getDefaultFormattedDiskInfo,
     &getDefaultFormattedNetInfo,
+    &getDefaultFormattedDesktopEnvironmentInfo,
     &getDefaultFormattedWindowManagerInfo,
     &getDefaultFormattedTerminalNameInfo,
     &getDefaultFormattedLocaleInfo,
@@ -303,6 +305,23 @@ pub fn getFormattedDiskInfo(fmt_ctx: FormatterContext, key: []const u8, key_colo
         disk_info.disk_size,
         disk_info.disk_usage_percentage,
     }) };
+}
+
+pub fn getDefaultFormattedDesktopEnvironmentInfo(fmt_ctx: FormatterContext) !Result {
+    return try getFormattedDesktopEnvironmentInfo(fmt_ctx, "DE", display.Yellow);
+}
+
+pub fn getFormattedDesktopEnvironmentInfo(fmt_ctx: FormatterContext, key: []const u8, key_color: []const u8) !Result {
+    const allocator = fmt_ctx.gpa;
+    const environ = fmt_ctx.environ;
+
+    const de = if (builtin.os.tag == .macos) "Aqua" else if (builtin.os.tag == .linux) try detection.system.getDesktopEnvironmentInfo(allocator, environ);
+    defer {
+        if (builtin.os.tag != .macos) {
+            allocator.free(de);
+        }
+    }
+    return Result{ .string = try std.mem.Allocator.print(allocator, "{s}{s}:{s} {s}", .{ key_color, key, display.Reset, de }) };
 }
 
 pub fn getDefaultFormattedWindowManagerInfo(fmt_ctx: FormatterContext) !Result {

@@ -133,6 +133,7 @@ Available modules:
 - Swap
 - Disk
 - Net
+- DE (Desktop Environment)
 - WM (Window Manager)
 - Terminal
 - Locale
@@ -151,6 +152,7 @@ Available modules:
 |    swap     |       Yes       |           Yes            |   WIP   |
 |    disk     |       Yes       |           Yes            |   WIP   |
 |     net     |       Yes       |           Yes            |   WIP   |
+|     de      |       Yes       |           Yes            |   WIP   |
 |     wm      |       Yes       |           Yes            |   WIP   |
 |  terminal   |       Yes       |           Yes            |   WIP   |
 |   locale    |       Yes       |           Yes            |   WIP   |
